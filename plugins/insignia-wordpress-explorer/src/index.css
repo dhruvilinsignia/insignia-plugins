@@ -1,0 +1,3989 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   WP Plugin & Theme Downloader v4.0 — Clean Green + Light Pastel Theme
+   Inspired by WordPress admin aesthetics: green primary, off-white bg,
+   light pastel accent cards (yellow, purple, pink, green).
+   Font: Inter (UI) + JetBrains Mono (code).
+───────────────────────────────────────────────────────────────────────────── */
+
+/*
+ * Layout philosophy
+ * ------------------
+ * #wptd-root is rendered INSIDE WordPress' `.wrap` container (see
+ * includes/Admin/class-menu.php). That gives us the standard admin
+ * padding automatically, so we must NOT add negative margins here —
+ * negative margins were the cause of "cut from the top" + right-side
+ * gap + bottom horizontal scrollbar.
+ *
+ * We do three things to stay inside the viewport:
+ *   1. Use width: 100% (no max-width centering → no dead space on right).
+ *   2. Set overflow-x: hidden on the page wrapper so no horizontal
+ *      scrollbar ever appears at the bottom.
+ *   3. The code-editor view uses a height calc that accounts for the
+ *      actual WP admin chrome (admin bar + .wrap top margin + our own
+ *      header + tabs + mode pills), so the editor pane scrolls
+ *      internally instead of pushing the page taller than the viewport.
+ */
+#wptd-root {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
+}
+#wptd-root * { box-sizing: border-box; }
+#wpcontent {padding:0px !important;}
+/* Neutralise .wrap's default top margin so our header sits flush at top
+   without being pushed down (which made the layout feel "cut"). */
+.wrap.wptd-wrap {
+        margin: 0;
+/*         padding: 0 20px 20px; */
+}
+
+/* ── Spacing scale ─────────────────────────────────────────────────────────── */
+:root, #wptd-root {
+        --wptd-space-1: 4px;
+        --wptd-space-2: 8px;
+        --wptd-space-3: 12px;
+        --wptd-space-4: 16px;
+        --wptd-space-5: 20px;
+        --wptd-space-6: 24px;
+        --wptd-space-7: 32px;
+        --wptd-space-8: 40px;
+}
+
+/* ── Theme variables ───────────────────────────────────────────────────────── */
+:root,
+#wptd-root {
+        /* Brand — WordPress green */
+        --wptd-primary: #1e7e34;
+        --wptd-primary-hover: #155724;
+        --wptd-primary-soft: #d4edda;
+        --wptd-primary-softer: #e8f5ea;
+        --wptd-accent: #28a745;
+
+        /* Surfaces */
+        --wptd-bg: #f8f9fa;
+        --wptd-bg-soft: #f1f3f5;
+        --wptd-surface: #ffffff;
+        --wptd-surface-2: #fcfcfd;
+        --wptd-surface-3: #f1f3f5;
+
+        /* Text */
+        --wptd-text: #212529;
+        --wptd-text-muted: #6c757d;
+        --wptd-text-soft: #adb5bd;
+
+        /* Borders */
+        --wptd-border: #dee2e6;
+        --wptd-border-strong: #ced4da;
+
+        /* Pastel accents */
+        --wptd-yellow: #fff3cd;
+        --wptd-yellow-text: #856404;
+        --wptd-purple: #e2d9f3;
+        --wptd-purple-text: #6f42c1;
+        --wptd-pink: #f8d7da;
+        --wptd-pink-text: #dc3545;
+        --wptd-blue: #d1ecf1;
+        --wptd-blue-text: #0c5460;
+
+        /* Status */
+        --wptd-success: #28a745;
+        --wptd-success-soft: #d4edda;
+        --wptd-danger: #dc3545;
+        --wptd-danger-soft: #f8d7da;
+        --wptd-warning: #ffc107;
+        --wptd-warning-soft: #fff3cd;
+
+        /* Stat card gradients — lighter → darker, same hue family per card */
+        /* Stat card flat colors — one green family, stepped light → dark across the 6 cards */
+        --wptd-mono-1: hsl(134, 42%, 95%);
+        --wptd-mono-2: hsl(134, 42%, 90%);
+        --wptd-mono-3: hsl(134, 40%, 84%);
+        --wptd-mono-4: hsl(134, 38%, 78%);
+        --wptd-mono-5: hsl(134, 40%, 71%);
+        --wptd-mono-6: hsl(134, 42%, 63%);
+        --wptd-mono-icon: hsl(134, 55%, 22%);
+        --wptd-mono-fg-dark: hsl(134, 60%, 16%);
+        --wptd-mono-fg-light: #ffffff;
+        --wptd-mono-label-dark: var(--wptd-text-muted);
+        --wptd-mono-label-light: rgba(255,255,255,.82);
+
+        /* Header */
+        --wptd-header-bg: #ffffff;
+        --wptd-header-bg-2: #f8f9fa;
+        --wptd-header-text: #212529;
+        --wptd-header-muted: #6c757d;
+
+        /* Shadows */
+        --wptd-shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+        --wptd-shadow-md: 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
+        --wptd-shadow-lg: 0 10px 30px rgba(0,0,0,.10), 0 4px 12px rgba(0,0,0,.06);
+        --wptd-shadow-glow: 0 4px 20px rgba(30,126,52,.20);
+
+        /* Radius */
+        --wptd-radius-sm: 6px;
+        --wptd-radius: 8px;
+        --wptd-radius-lg: 12px;
+        --wptd-radius-xl: 16px;
+
+        /* Transition */
+        --wptd-transition: .2s cubic-bezier(.4,0,.2,1);
+
+        /* Font */
+        --wptd-font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        --wptd-font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', Menlo, Monaco, Consolas, monospace;
+}
+
+/* ── Page shell ────────────────────────────────────────────────────────────── */
+.wptd-page {
+        min-height: 100vh;
+        background: var(--wptd-bg);
+        color: var(--wptd-text);
+        font-family: var(--wptd-font);
+        font-size: 15px;
+        line-height: 1.5;
+        transition: background var(--wptd-transition);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        overflow-x: hidden;
+        /* No max-width / no centering — fill whatever .wrap gives us so
+           there is never dead space on the right side. */
+        width: 100%;
+        max-width: 100%;
+        position: relative;
+}
+
+/* Thin animated gradient accent bar at the very top of the app —
+   gives the page a "premium product" feel without being noisy. */
+.wptd-page::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(
+                90deg,
+                #059669 0%,
+                #10b981 25%,
+                #c9a96e 50%,
+                #f59e0b 75%,
+                #059669 100%
+        );
+        background-size: 200% 100%;
+        animation: wptd-aurora-sweep 8s linear infinite;
+        z-index: 10;
+        pointer-events: none;
+}
+
+@keyframes wptd-aurora-sweep {
+        0%   { background-position: 0% 0%; }
+        100% { background-position: 200% 0%; }
+}
+
+/* ── HEADER ────────────────────────────────────────────────────────────────── */
+.wptd-header {
+        background: var(--wptd-header-bg);
+        color: var(--wptd-header-text);
+        padding: 0 32px;
+        box-shadow: var(--wptd-shadow-sm);
+        position: none !important;
+
+        border-bottom: 1px solid var(--wptd-border);
+        overflow: hidden;
+        position: relative;
+}
+
+/* ── Animated aurora background for the header ───────────────────────────────
+   Three soft gradient "blobs" drift slowly behind the header content.
+   They're aria-hidden in JSX and pointer-events:none here so they never
+   capture clicks or hurt accessibility.
+   ────────────────────────────────────────────────────────────────────────── */
+.wptd-header__aurora {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+        z-index: 0;
+}
+
+.wptd-blob {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(32px);
+        opacity: .45;
+        will-change: transform;
+}
+
+.wptd-blob--1 {
+        width: 260px;
+        height: 260px;
+        top: -120px;
+        left: 8%;
+        background: radial-gradient(circle at 30% 30%, #10b981, transparent 70%);
+        animation: wptd-blob-float-1 14s ease-in-out infinite;
+}
+
+.wptd-blob--2 {
+        width: 320px;
+        height: 320px;
+        top: -160px;
+        right: 14%;
+        background: radial-gradient(circle at 70% 30%, #c9a96e, transparent 70%);
+        animation: wptd-blob-float-2 18s ease-in-out infinite;
+        opacity: .38;
+}
+
+.wptd-blob--3 {
+        width: 220px;
+        height: 220px;
+        bottom: -120px;
+        left: 38%;
+        background: radial-gradient(circle at 50% 50%, #059669, transparent 70%);
+        animation: wptd-blob-float-3 16s ease-in-out infinite;
+        opacity: .32;
+}
+
+/* Subtle dotted-grid overlay so the blobs read as "in a structured app"
+   rather than a random wash of colour. */
+.wptd-grid-overlay {
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient( currentColor 1px, transparent 1px );
+        background-size: 22px 22px;
+        color: var(--wptd-text-soft);
+        opacity: .04;
+        mask-image: linear-gradient( to bottom, #000 0%, transparent 100% );
+        -webkit-mask-image: linear-gradient( to bottom, #000 0%, transparent 100% );
+}
+
+@keyframes wptd-blob-float-1 {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33%      { transform: translate(40px, 30px) scale(1.1); }
+        66%      { transform: translate(-20px, 50px) scale(.95); }
+}
+@keyframes wptd-blob-float-2 {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33%      { transform: translate(-50px, 40px) scale(1.08); }
+        66%      { transform: translate(30px, -20px) scale(.92); }
+}
+@keyframes wptd-blob-float-3 {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50%      { transform: translate(60px, -30px) scale(1.15); }
+}
+
+/* Keep the header content above the aurora blobs */
+.wptd-header__top,
+.wptd-tabs {
+        position: relative;
+        z-index: 1;
+}
+
+.wptd-header__top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 0;
+        gap: 24px;
+        flex-wrap: wrap;
+        min-height: 56px;
+}
+
+.wptd-brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+}
+
+/* Brand icon — the custom Insignia logo.  The wrapper is a rounded
+   square with a soft glow + slow "shimmer" rotation so the mark feels
+   alive without being distracting. */
+.wptd-brand__icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: #fff;
+        background: linear-gradient(135deg, #064e3b 0%, #059669 55%, #10b981 100%);
+        box-shadow:
+                0 6px 16px rgba(16, 185, 129, .35),
+                0 2px 6px rgba(5, 150, 105, .25),
+                inset 0 1px 0 rgba(255, 255, 255, .25);
+        position: relative;
+        overflow: hidden;
+        animation: wptd-brand-glow 4s ease-in-out infinite;
+}
+
+.wptd-brand__icon::before {
+        /* Diagonal sheen that sweeps across the logo every 6s */
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -75%;
+        width: 50%;
+        height: 200%;
+        background: linear-gradient(
+                115deg,
+                transparent 0%,
+                rgba(255, 255, 255, .55) 50%,
+                transparent 100%
+        );
+        transform: skewX(-18deg);
+        animation: wptd-brand-sheen 6s ease-in-out infinite;
+}
+
+.wptd-brand__icon .wptd-insignia-logo {
+        position: relative;
+        z-index: 1;
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .25));
+}
+
+@keyframes wptd-brand-glow {
+        0%, 100% {
+                box-shadow:
+                        0 6px 16px rgba(16, 185, 129, .35),
+                        0 2px 6px rgba(5, 150, 105, .25),
+                        inset 0 1px 0 rgba(255, 255, 255, .25);
+        }
+        50% {
+                box-shadow:
+                        0 8px 22px rgba(16, 185, 129, .5),
+                        0 3px 10px rgba(201, 169, 110, .35),
+                        inset 0 1px 0 rgba(255, 255, 255, .35);
+        }
+}
+
+@keyframes wptd-brand-sheen {
+        0%   { left: -75%; }
+        60%  { left: 125%; }
+        100% { left: 125%; }
+}
+
+.wptd-brand__title {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--wptd-header-text);
+        margin: 0;
+        padding: 0;
+        border: none;
+        line-height: 1.2;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        letter-spacing: -.025em;
+        /* Subtle gradient text-fill for the brand name itself */
+        background: linear-gradient(135deg, #065f46 0%, #059669 45%, #c9a96e 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+}
+
+/* Force the version pill back to a solid color (gradient text-fill above
+   would otherwise make the pill text transparent too). */
+.wptd-brand__title .wptd-brand__ver {
+        -webkit-text-fill-color: var(--wptd-primary);
+}
+
+.wptd-brand__ver {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--wptd-primary);
+        background: var(--wptd-primary-soft);
+        padding: 3px 9px;
+        border-radius: 6px;
+        border: 1px solid rgba(30, 126, 52, .15);
+        letter-spacing: .02em;
+}
+
+.wptd-brand__sub {
+        font-size: 13px;
+        color: var(--wptd-header-muted);
+        margin: 3px 0 0;
+        font-weight: 500;
+}
+
+.wptd-header__actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+}
+
+/* Search — simple flat style */
+.wptd-header__search {
+        position: relative;
+        flex-shrink: 0;
+        width: 340px;
+        margin: 0 4px;
+        display: flex;
+        align-items: center;
+}
+
+.wptd-search-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 17px;
+        height: 17px;
+        color: var(--wptd-text-muted);
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 0;
+        z-index: 1;
+}
+
+.wptd-search-input {
+        width: 100%;
+        /* Right padding reserves room for the "Ctrl K" hint by default;
+           narrower layouts hide the hint and reclaim this space (see the
+           responsive rules further down) instead of letting text collide
+           with it. */
+        padding: 10px 64px 10px 44px !important;
+        border: 1px solid var(--wptd-border) !important;
+        border-radius: 8px !important;
+        color: var(--wptd-text);
+        font-size: 14px;
+        font-weight: 500;
+        outline: none;
+        box-sizing: border-box;
+        font-family: var(--wptd-font);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+}
+
+.wptd-search-input::placeholder { color: var(--wptd-text-soft); }
+
+/* WordPress admin core CSS applies its own blue border + box-shadow to
+   text inputs on hover/focus/active. Explicitly neutralize that here so
+   the field always shows the same plain 1px border with no color change. */
+.wptd-search-input:hover,
+.wptd-search-input:focus,
+.wptd-search-input:active,
+.wptd-search-input:focus-visible {
+        border: 1px solid var(--wptd-border) !important;
+        box-shadow: none !important;
+        outline: none !important;
+}
+
+.wptd-search-clear,
+.wptd-search-kbd {
+        position: absolute;
+        right: 9px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--wptd-text-muted);
+        cursor: pointer;
+        font-size: 13px;
+        padding: 4px 6px;
+        line-height: 1;
+        font-family: var(--wptd-font);
+        z-index: 1;
+}
+
+.wptd-search-kbd {
+        font-weight: 700;
+        pointer-events: none;
+        border-radius: 6px;
+        padding: 3px 8px;
+        font-size: 11px;
+        letter-spacing: .02em;
+        border: 1px solid var(--wptd-border);
+}
+
+.wptd-header__search:focus-within .wptd-search-kbd { display: none; }
+
+.wptd-search-clear {
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+}
+
+/* Icon buttons */
+.wptd-icon-btn {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--wptd-surface);
+        border: 1px solid var(--wptd-border);
+        border-radius: var(--wptd-radius);
+        color: var(--wptd-text-muted);
+        cursor: pointer;
+        transition: all var(--wptd-transition);
+        flex-shrink: 0;
+}
+
+.wptd-icon-btn:hover {
+        background: var(--wptd-primary-soft);
+        border-color: var(--wptd-primary);
+        color: var(--wptd-primary);
+}
+
+.wptd-icon-btn.is-active {
+        background: var(--wptd-primary);
+        color: #fff;
+        border-color: var(--wptd-primary);
+}
+
+.wptd-icon-btn--small {
+        width: 28px;
+        height: 28px;
+        border-radius: 5px;
+}
+
+/* Tabs */
+.wptd-tabs {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        border-top: 1px solid var(--wptd-border);
+        padding: 10px 0;
+}
+
+.wptd-tabs__spacer { flex: 1; }
+
+.wptd-tab {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border: none;
+        border-radius: 999px;
+        color: var(--wptd-text-muted);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: color var(--wptd-transition), background var(--wptd-transition), transform var(--wptd-transition);
+        position: relative;
+        font-family: var(--wptd-font);
+}
+
+.wptd-tab:hover { color: var(--wptd-text); background: var(--wptd-surface-3); transform: translateY(-1px);border-radius: 8px !important;background: #E8F5EA !important; }
+
+.wptd-tab.is-active {
+        color: var(--wptd-primary);
+        background: var(--wptd-primary-soft);
+        box-shadow: 0 0 0 1px rgba(30, 126, 52, .15), 0 4px 12px rgba(30, 126, 52, .12);
+}
+
+/* Animated active-tab underline: each tab carries a pseudo-element bar that
+   only paints for the active tab, and animates in via scale for a smooth
+   "slide" feel without needing JS-measured positions. */
+.wptd-tab::after {
+        content: "";
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        bottom: -9px;
+        height: 3px;
+        border-radius: 3px 3px 0 0;
+        background: var(--wptd-primary);
+        transform: scaleX(0);
+        transform-origin: center;
+        transition: transform .25s cubic-bezier(.4,0,.2,1);
+}
+
+.wptd-tab.is-active::after { transform: scaleX(1); }
+
+.wptd-tab__count {
+        background: var(--wptd-surface-3);
+        color: var(--wptd-text-muted);
+        border-radius: 20px;
+        padding: 2px 8px;
+        font-size: 12px;
+        font-weight: 700;
+        min-width: 22px;
+        text-align: center;
+}
+
+.wptd-tab.is-active .wptd-tab__count {
+        background: var(--wptd-primary);
+        color: #fff;
+}
+
+.wptd-tab__hint {
+        font-size: 12.5px;
+        color: var(--wptd-text-muted);
+        padding: 0 8px;
+        font-weight: 500;
+}
+
+/* Mode switch */
+.wptd-mode-switch {
+        display: inline-flex;
+        background: var(--wptd-surface-3);
+        border-radius: var(--wptd-radius);
+        padding: 3px;
+        gap: 2px;
+        margin: 0 8px;
+}
+
+.wptd-mode-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: none;
+        border: none;
+        color: var(--wptd-text-muted);
+        font-size: 13px;
+        font-weight: 600;
+        padding: 7px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all var(--wptd-transition);
+        font-family: var(--wptd-font);
+}
+
+.wptd-mode-btn:hover { color: var(--wptd-text); }
+
+.wptd-mode-btn.is-active {
+        background: var(--wptd-surface);
+        color: var(--wptd-primary);
+        box-shadow: var(--wptd-shadow-sm);
+}
+
+/* ── BODY ──────────────────────────────────────────────────────────────────── */
+.wptd-body {
+        padding: 24px 28px 48px;
+        /* No max-width and no auto-margin — the body fills the full width
+           that .wrap gives us, so there is never empty space on the right
+           side of the dashboard. */
+        width: 100%;
+        max-width: 100%;
+}
+
+/* ── STATS BAR ─────────────────────────────────────────────────────────────── */
+.wptd-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 18px;
+        margin: 28px 0 26px;
+}
+
+.wptd-stat {
+        background: var(--wptd-surface);
+        border-radius: var(--wptd-radius-lg);
+        border: 1px solid var(--wptd-border);
+        padding: 20px 22px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        box-shadow: var(--wptd-shadow-sm);
+        min-width: 0;
+        height: 100%;
+        transition: box-shadow var(--wptd-transition), transform var(--wptd-transition), border-color var(--wptd-transition);
+        contain: layout paint;
+        will-change: transform;
+}
+
+.wptd-stat:hover {
+        box-shadow: var(--wptd-shadow-md);
+        transform: translateY(-3px);
+}
+
+.wptd-stat--total    { background: var(--wptd-mono-1); border-color: transparent; }
+.wptd-stat--active   { background: var(--wptd-mono-2); border-color: transparent; }
+.wptd-stat--inactive { background: var(--wptd-mono-3); border-color: transparent; }
+.wptd-stat--size     { background: var(--wptd-mono-4); border-color: transparent; }
+.wptd-stat--filtered { background: var(--wptd-mono-5); border-color: transparent; }
+.wptd-stat--selected { background: var(--wptd-mono-6); border-color: transparent; }
+
+.wptd-stat__icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background: rgba(255,255,255,.55);
+}
+
+.wptd-stat__icon { color: var(--wptd-mono-icon); }
+
+.wptd-stat__main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+
+.wptd-stat__value {
+        font-size: 30px;
+        font-weight: 800;
+        color: var(--wptd-text);
+        line-height: 1.05;
+        letter-spacing: -.02em;
+        font-variant-numeric: tabular-nums;
+}
+
+.wptd-stat--total .wptd-stat__value    { color: var(--wptd-mono-fg-dark); }
+.wptd-stat--active .wptd-stat__value   { color: var(--wptd-mono-fg-dark); }
+.wptd-stat--inactive .wptd-stat__value { color: var(--wptd-mono-fg-dark); }
+.wptd-stat--size .wptd-stat__value     { color: var(--wptd-mono-fg-dark); }
+.wptd-stat--filtered .wptd-stat__value { color: var(--wptd-mono-fg-dark); }
+.wptd-stat--selected .wptd-stat__value { color: var(--wptd-mono-fg-dark); }
+
+.wptd-stat__label {
+        font-size: 12px;
+        color: var(--wptd-text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+}
+
+.wptd-stat__sub { font-size: 11px; color: var(--wptd-text-soft); font-weight: 500; }
+.wptd-stat--skeleton { min-width: 200px; }
+
+.wptd-stat--total .wptd-stat__label,
+.wptd-stat--active .wptd-stat__label,
+.wptd-stat--inactive .wptd-stat__label,
+.wptd-stat--size .wptd-stat__label,
+.wptd-stat--filtered .wptd-stat__label,
+.wptd-stat--selected .wptd-stat__label { color: var(--wptd-mono-label-dark); }
+
+/* ── TOOLBAR ───────────────────────────────────────────────────────────────── */
+.wptd-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 22px;
+        flex-wrap: wrap;
+}
+
+.wptd-toolbar__left,
+.wptd-toolbar__right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+}
+
+/* ── Custom dropdown (Select.js) ──────────────────────────────────────────
+   Replaces the native <select>. A native select's open list is rendered by
+   the OS and can't be restyled, so this is a real button + floating panel
+   that we fully control and theme to match the rest of the app. */
+
+.wptd-dselect {
+        position: relative;
+        display: inline-flex;
+}
+
+.wptd-dselect__trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        background: var(--wptd-surface);
+        border: 1px solid var(--wptd-border);
+        color: var(--wptd-text);
+        padding: 9px 14px;
+        border-radius: 10px;
+        font-size: 13.5px;
+        font-weight: 500;
+        cursor: pointer;
+        outline: none;
+        transition: all var(--wptd-transition);
+        font-family: var(--wptd-font);
+        box-shadow: 0 1px 2px rgba(0,0,0,.03);
+        white-space: nowrap;
+}
+
+.wptd-dselect__icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--wptd-text-muted);
+        flex-shrink: 0;
+        transition: color var(--wptd-transition);
+}
+
+.wptd-dselect__value {
+        overflow: hidden;
+        text-overflow: ellipsis;
+}
+
+.wptd-dselect__chevron {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--wptd-text-muted);
+        flex-shrink: 0;
+        margin-left: 2px;
+        transition: transform var(--wptd-transition), color var(--wptd-transition);
+}
+
+.wptd-dselect__trigger:hover {
+        border-color: var(--wptd-border-strong);
+        box-shadow: 0 2px 6px rgba(0,0,0,.05);
+}
+
+.wptd-dselect__trigger:hover .wptd-dselect__icon,
+.wptd-dselect__trigger:hover .wptd-dselect__chevron { color: var(--wptd-text); }
+
+.wptd-dselect__trigger:focus-visible {
+        border-color: var(--wptd-primary);
+        box-shadow: 0 0 0 3px var(--wptd-primary-softer);
+}
+
+.wptd-dselect.is-open .wptd-dselect__trigger {
+        border-color: var(--wptd-primary);
+        box-shadow: 0 0 0 3px var(--wptd-primary-softer), 0 4px 14px rgba(0,0,0,.06);
+}
+
+.wptd-dselect.is-open .wptd-dselect__icon,
+.wptd-dselect.is-open .wptd-dselect__chevron { color: var(--wptd-primary); }
+
+.wptd-dselect.is-open .wptd-dselect__chevron { transform: rotate(180deg); }
+
+.wptd-dselect__panel {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        min-width: 100%;
+        width: max-content;
+        max-width: 280px;
+        background: var(--wptd-surface);
+        border: 1px solid var(--wptd-border);
+        border-radius: 12px;
+        box-shadow: 0 12px 28px rgba(0,0,0,.14), 0 2px 8px rgba(0,0,0,.06);
+        padding: 6px;
+        z-index: 60;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        animation: wptd-dselect-in .15s cubic-bezier(.16,1,.3,1);
+}
+
+@keyframes wptd-dselect-in {
+        from { opacity: 0; transform: translateY(-4px) scale(.98); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.wptd-dselect__option {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        width: 100%;
+        background: none;
+        border: none;
+        border-radius: 8px;
+        color: var(--wptd-text);
+        font-size: 13.5px;
+        font-weight: 500;
+        font-family: var(--wptd-font);
+        text-align: left;
+        padding: 8px 10px;
+        cursor: pointer;
+        transition: background-color var(--wptd-transition), color var(--wptd-transition);
+}
+
+.wptd-dselect__option.is-active {
+        background: var(--wptd-surface-3);
+}
+
+.wptd-dselect__option.is-selected {
+        color: var(--wptd-primary);
+        font-weight: 600;
+}
+
+.wptd-dselect__option.is-selected.is-active {
+        background: var(--wptd-primary-softer);
+}
+
+.wptd-dselect__check {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--wptd-primary);
+        flex-shrink: 0;
+}
+
+.wptd-dselect__option-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+}
+
+.wptd-dselect__empty {
+        padding: 10px;
+        font-size: 13px;
+        color: var(--wptd-text-muted);
+        text-align: center;
+}
+
+
+
+.wptd-segmented {
+        display: inline-flex;
+        background: var(--wptd-surface-3);
+        border-radius: var(--wptd-radius);
+        padding: 3px;
+        gap: 2px;
+}
+
+.wptd-seg {
+        background: none;
+        border: none;
+        color: var(--wptd-text-muted);
+        font-size: 13px;
+        font-weight: 600;
+        padding: 7px 13px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all var(--wptd-transition);
+        font-family: var(--wptd-font);
+}
+
+.wptd-seg:hover { color: var(--wptd-text); }
+
+.wptd-seg.is-active {
+        background: var(--wptd-surface);
+        color: var(--wptd-primary);
+        box-shadow: var(--wptd-shadow-sm);
+}
+
+.wptd-count-pill {
+        background: var(--wptd-surface-3);
+        color: var(--wptd-text-muted);
+        font-size: 12.5px;
+        font-weight: 600;
+        padding: 7px 13px;
+        border-radius: 20px;
+}
+
+/* Bulk action bar */
+.wptd-bulk-bar {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--wptd-primary);
+        color: #fff;
+        padding: 6px 6px 6px 14px;
+        border-radius: var(--wptd-radius);
+        box-shadow: var(--wptd-shadow-glow);
+        animation: wptd-pop-in .3s cubic-bezier(.34,1.56,.64,1);
+}
+
+.wptd-bulk-count { font-size: 13.5px; font-weight: 700; color: #fff; }
+
+/* ── BUTTONS ──────────────────────────────────────────────────────────────── */
+.wptd-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 9px 16px;
+        border: none;
+        border-radius: var(--wptd-radius);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--wptd-transition);
+        font-family: var(--wptd-font);
+        white-space: nowrap;
+}
+
+.wptd-btn--primary {
+        background: var(--wptd-primary);
+        color: #fff;
+}
+
+.wptd-btn--primary:hover:not(:disabled) {
+        background: var(--wptd-primary-hover);
+        transform: translateY(-1px);
+}
+
+.wptd-btn--ghost {
+        background: var(--wptd-surface);
+        color: var(--wptd-text);
+        border: 1px solid var(--wptd-border);
+}
+
+.wptd-btn--ghost:hover:not(:disabled) {
+        background: var(--wptd-surface-3);
+        border-color: var(--wptd-border-strong);
+}
+
+.wptd-btn--danger { background: var(--wptd-danger); color: #fff; }
+.wptd-btn--danger:hover:not(:disabled) { background: #b02a37; }
+
+.wptd-btn--warning { background: var(--wptd-warning); color: #1f1300; }
+.wptd-btn--warning:hover:not(:disabled) { background: #e0a800; transform: translateY(-1px); }
+
+.wptd-btn:active:not(:disabled) { transform: translateY(0) scale(.97); }
+
+.wptd-btn:disabled, .wptd-btn.is-busy { opacity: .65; cursor: not-allowed; transform: none; }
+
+.wptd-btn-spinner {
+        width: 14px; height: 14px;
+        border: 2px solid rgba(255,255,255,.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: wptd-spin .7s linear infinite;
+        display: inline-block;
+        flex-shrink: 0;
+}
+
+.wptd-btn-spinner--lg { width: 30px; height: 30px; border-width: 3px; }
+.wptd-btn-spinner--xs { width: 12px; height: 12px; border-width: 2px; border-color: rgba(30,126,52,.2); border-top-color: var(--wptd-primary); }
+
+.wptd-row-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 10px;
+        background: var(--wptd-surface);
+        color: var(--wptd-text-muted);
+        border: 1px solid var(--wptd-border);
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all var(--wptd-transition);
+        font-family: var(--wptd-font);
+}
+
+.wptd-row-btn:hover { background: var(--wptd-primary-soft); color: var(--wptd-primary); border-color: var(--wptd-primary); }
+.wptd-row-btn--primary { background: var(--wptd-primary-soft); color: var(--wptd-primary); border-color: transparent; }
+.wptd-row-btn--primary:hover { background: var(--wptd-primary); color: #fff; }
+.wptd-row-btn.is-busy { opacity: .6; }
+
+.wptd-link-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: none;
+        border: none;
+        color: var(--wptd-text-muted);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 8px 12px;
+        border-radius: var(--wptd-radius);
+        transition: all var(--wptd-transition);
+        font-family: var(--wptd-font);
+}
+
+.wptd-link-btn:hover { background: var(--wptd-primary-soft); color: var(--wptd-primary); }
+
+.wptd-link-btn__count {
+        background: var(--wptd-primary);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 10px;
+        min-width: 18px;
+        text-align: center;
+}
+
+/* ── CARD GRID ─────────────────────────────────────────────────────────────── */
+.wptd-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 22px;
+        padding: 4px 0;
+        align-items: stretch;
+        min-width: 0;
+}
+@media (max-width: 1400px) { .wptd-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 960px)  { .wptd-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px)  { .wptd-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* ── CARD (spacious, calm) ────────────────────────────────────────────────── */
+.wptd-card {
+        background: var(--wptd-surface);
+        border-radius: var(--wptd-radius-lg);
+        border: 1px solid var(--wptd-border);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        box-shadow: var(--wptd-shadow-sm);
+        transition: box-shadow .2s, border-color .2s, transform .15s;
+        position: relative;
+        animation: wptd-card-in .3s ease both;
+        cursor: pointer;
+        height: 100%;
+        min-width: 0;
+        contain: layout paint;
+        will-change: transform;
+}
+
+@keyframes wptd-card-in {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+}
+
+.wptd-card:hover {
+        box-shadow: var(--wptd-shadow-md);
+        border-color: var(--wptd-border-strong);
+        transform: translateY(-2px);
+}
+
+.wptd-card.is-selected {
+        border-color: var(--wptd-primary);
+        background: var(--wptd-primary-softer);
+        box-shadow: 0 0 0 2px var(--wptd-primary), var(--wptd-shadow-md);
+}
+
+.wptd-card.is-busy { opacity: .75; }
+
+/* Checkbox — visually hidden but kept in the DOM for screen-reader users.
+   Sighted users only see the animated checkmark badge that appears on the
+   selected card. */
+.wptd-card__check {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+        z-index: 2;
+}
+.wptd-card__check input[type="checkbox"] {
+        width: 16px; height: 16px; cursor: pointer; accent-color: var(--wptd-primary);
+        margin: 0;
+}
+
+/* Reusable screen-reader-only utility (used by the grid checkbox label). */
+.wptd-sr-only {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+}
+
+/* Animated checkmark popover shown on selected cards */
+.wptd-card__checkmark {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: var(--wptd-primary);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 3;
+        box-shadow: var(--wptd-shadow-md);
+        transform: scale(0);
+        opacity: 0;
+        transition: transform .22s cubic-bezier(.34,1.56,.64,1), opacity .18s ease;
+        pointer-events: none;
+}
+.wptd-card.is-selected .wptd-card__checkmark {
+        transform: scale(1);
+        opacity: 1;
+}
+.wptd-card__checkmark svg { width: 14px; height: 14px; }
+
+/* Card head: avatar + name + status pill */
+.wptd-card__head {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+        padding-right: 28px;
+}
+
+.wptd-card__avatar {
+        width: 48px; height: 48px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--card-color-1, var(--wptd-primary)), var(--card-color-2, var(--wptd-accent)));
+        color: #fff;
+        font-size: 16px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        letter-spacing: -.02em;
+        box-shadow: 0 2px 6px rgba(0,0,0,.08);
+}
+
+.wptd-card.is-inactive .wptd-card__avatar {
+        background: var(--wptd-text-soft);
+}
+
+.wptd-card__head-text {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+}
+
+.wptd-card__name {
+        font-size: 15.5px;
+        font-weight: 700;
+        color: var(--wptd-text);
+        margin: 0;
+        line-height: 1.25;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        letter-spacing: -.01em;
+}
+
+/* Status pill (replaces the bare colored dot) */
+.wptd-card__status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11.5px;
+        font-weight: 700;
+        padding: 3px 9px 3px 7px;
+        border-radius: 20px;
+        width: fit-content;
+        letter-spacing: .01em;
+}
+
+.wptd-card__status-dot {
+        width: 7px; height: 7px;
+        border-radius: 50%;
+        flex-shrink: 0;
+}
+
+.wptd-card__status.is-on {
+        background: var(--wptd-success-soft);
+        color: var(--wptd-success);
+}
+
+.wptd-card__status.is-on .wptd-card__status-dot {
+        background: var(--wptd-success);
+        box-shadow: 0 0 0 2px rgba(40, 167, 69, .25);
+}
+
+.wptd-card__status.is-off {
+        background: var(--wptd-surface-3);
+        color: var(--wptd-text-muted);
+}
+
+.wptd-card__status.is-off .wptd-card__status-dot {
+        background: var(--wptd-text-soft);
+}
+
+/* Meta line — small, optional info displayed inline */
+.wptd-card__meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 14px;
+        padding: 4px 0 0;
+        border-top: 1px solid var(--wptd-border);
+        margin: -2px 0 0;
+        padding-top: 14px;
+}
+
+.wptd-meta-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--wptd-text-muted);
+        font-family: var(--wptd-font);
+}
+
+.wptd-meta-item .wptd-icon {
+        color: var(--wptd-text-soft);
+}
+
+/* Download button */
+.wptd-card__btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 12px 18px;
+        background: var(--wptd-primary);
+        color: #fff;
+        border: none;
+        border-radius: var(--wptd-radius);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background .2s, transform .15s, box-shadow .2s;
+        font-family: var(--wptd-font);
+        margin-top: auto;
+        box-shadow: 0 2px 4px rgba(30,126,52,.18);
+}
+
+.wptd-card__btn:hover:not(:disabled) {
+        background: var(--wptd-primary-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(30,126,52,.25);
+}
+
+.wptd-card__btn.is-busy, .wptd-card__btn:disabled {
+        opacity: .65; cursor: not-allowed; transform: none;
+        box-shadow: none;
+}
+
+
+/* ── TABLE VIEW ────────────────────────────────────────────────────────────── */
+.wptd-table-wrap {
+        background: var(--wptd-surface);
+        border-radius: var(--wptd-radius-lg);
+        border: 1px solid var(--wptd-border);
+        overflow: hidden;
+        box-shadow: var(--wptd-shadow-sm);
+}
+
+.wptd-table { border-collapse: collapse; width: 100%; font-size: 14px; }
+
+.wptd-table thead { background: var(--wptd-surface-2); border-bottom: 1px solid var(--wptd-border); }
+
+.wptd-table th {
+        text-align: left;
+        padding: 14px 16px;
+        font-weight: 700;
+        color: var(--wptd-text-muted);
+        font-size: 11.5px;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: var(--wptd-surface-2);
+}
+
+.wptd-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--wptd-border);
+        color: var(--wptd-text);
+        vertical-align: middle;
+}
+
+.wptd-table tbody tr { transition: background var(--wptd-transition), transform var(--wptd-transition); }
+.wptd-table tbody tr:hover { background: var(--wptd-surface-2); }
+.wptd-table tbody tr.is-selected { background: var(--wptd-primary-softer); }
+.wptd-table tbody tr.is-selected:hover { background: var(--wptd-primary-softer); }
+.wptd-table tbody tr.is-active td:first-child { box-shadow: inset 3px 0 0 var(--wptd-success); }
+.wptd-table tbody tr:last-child td { border-bottom: none; }
+
+/* Custom checkbox cell — hides the native box, shows a styled one. */
+.wptd-checkbox-cell {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        position: relative;
+        width: 18px;
+        height: 18px;
+}
+.wptd-checkbox-cell input { position: absolute; opacity: 0; inset: 0; cursor: pointer; margin: 0; }
+.wptd-checkbox-cell__box {
+        width: 18px;
+        height: 18px;
+        border-radius: 5px;
+        border: 1.5px solid var(--wptd-border-strong);
+        background: var(--wptd-surface);
+        transition: all var(--wptd-transition);
+        display: inline-block;
+        position: relative;
+}
+.wptd-checkbox-cell:hover .wptd-checkbox-cell__box { border-color: var(--wptd-primary); }
+.wptd-checkbox-cell input:checked + .wptd-checkbox-cell__box {
+        background: var(--wptd-primary);
+        border-color: var(--wptd-primary);
+}
+.wptd-checkbox-cell input:checked + .wptd-checkbox-cell__box::after {
+        content: "";
+        position: absolute;
+        left: 5px;
+        top: 1px;
+        width: 5px;
+        height: 10px;
+        border: solid #fff;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+}
+.wptd-checkbox-cell input:focus-visible + .wptd-checkbox-cell__box {
+        outline: 2px solid var(--wptd-primary);
+        outline-offset: 2px;
+}
+
+.wptd-col-check { width: 48px; text-align: center; }
+.wptd-col-name { min-width: 220px; }
+.wptd-col-version { width: 110px; }
+.wptd-col-size { width: 130px; }
+.wptd-col-status { width: 120px; }
+.wptd-col-mtime { width: 140px; font-size: 13px; color: var(--wptd-text-muted); white-space: nowrap; }
+.wptd-col-actions { width: 170px; white-space: nowrap; text-align: right; }
+
+/* Name column — icon + text stack */
+.wptd-col-name__row { display: flex; align-items: flex-start; gap: 12px; }
+.wptd-col-name__mark {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        flex-shrink: 0;
+        margin-top: 1px;
+}
+.wptd-col-name__mark.is-active {
+        background: var(--wptd-success-soft);
+        color: var(--wptd-success);
+}
+.wptd-col-name__mark.is-inactive {
+        background: var(--wptd-surface-3);
+        color: var(--wptd-text-soft);
+}
+.wptd-col-name__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.wptd-col-name strong { color: var(--wptd-text); font-size: 14px; font-weight: 700; display: block; }
+.wptd-col-desc { display: block; font-size: 12.5px; color: var(--wptd-text-muted); margin-top: 2px; line-height: 1.4; }
+.wptd-col-slug-line { display: flex; align-items: center; gap: 6px; margin-top: 3px; flex-wrap: wrap; }
+.wptd-col-author { font-size: 11.5px; color: var(--wptd-text-soft); }
+
+.wptd-col-slug { width: 180px; }
+.wptd-col-slug-line code {
+        background: var(--wptd-surface-3);
+        color: var(--wptd-text-muted);
+        padding: 1px 7px;
+        border-radius: 4px;
+        font-size: 11.5px;
+        font-weight: 600;
+        font-family: var(--wptd-font-mono);
+}
+
+/* Version chip */
+.wptd-version-chip {
+        display: inline-block;
+        background: var(--wptd-purple);
+        color: var(--wptd-purple-text);
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        font-family: var(--wptd-font-mono);
+        letter-spacing: .01em;
+}
+
+.wptd-muted-dash { color: var(--wptd-text-soft); }
+
+/* Size cell — value + count */
+.wptd-size-cell { display: flex; flex-direction: column; gap: 1px; }
+.wptd-size-cell__value { font-weight: 700; color: var(--wptd-text); font-size: 13px; }
+.wptd-size-cell__count { font-size: 11.5px; color: var(--wptd-text-muted); }
+
+.wptd-table code {
+        background: var(--wptd-surface-3);
+        color: var(--wptd-text-muted);
+        padding: 2px 7px;
+        border-radius: 4px;
+        font-size: 12.5px;
+        font-weight: 600;
+        font-family: var(--wptd-font-mono);
+}
+
+/* Status pills used in table view + picker */
+.wptd-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11.5px;
+        font-weight: 700;
+        padding: 3px 10px 3px 8px;
+        border-radius: 20px;
+        letter-spacing: .01em;
+        white-space: nowrap;
+}
+
+.wptd-pill__dot {
+        width: 7px; height: 7px;
+        border-radius: 50%;
+        flex-shrink: 0;
+}
+
+.wptd-pill--active {
+        background: var(--wptd-success-soft);
+        color: var(--wptd-success);
+}
+
+.wptd-pill--active .wptd-pill__dot {
+        background: var(--wptd-success);
+        box-shadow: 0 0 0 2px rgba(40, 167, 69, .25);
+}
+
+.wptd-pill--inactive {
+        background: var(--wptd-surface-3);
+        color: var(--wptd-text-muted);
+}
+
+.wptd-pill--inactive .wptd-pill__dot {
+        background: var(--wptd-text-soft);
+}
+
+/* ── EMPTY & ERROR STATES ──────────────────────────────────────────────────── */
+.wptd-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 20px;
+        color: var(--wptd-text-muted);
+        text-align: center;
+        gap: 12px;
+        background: var(--wptd-surface);
+        border: 2px dashed var(--wptd-border);
+        border-radius: var(--wptd-radius-lg);
+}
+
+.wptd-empty--inline { padding: 40px 20px; border: none; background: transparent; }
+.wptd-empty__icon { color: var(--wptd-text-soft); margin-bottom: 4px; }
+.wptd-empty h3 { margin: 0; color: var(--wptd-text); font-size: 17px; font-weight: 700; }
+.wptd-empty p { margin: 0; font-size: 14px; max-width: 360px; }
+
+.wptd-error-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 50px 20px;
+        text-align: center;
+        gap: 10px;
+        background: var(--wptd-surface);
+        border: 1px solid var(--wptd-danger);
+        border-radius: var(--wptd-radius-lg);
+}
+
+.wptd-error-state__icon { color: var(--wptd-danger); }
+.wptd-error-state h3 { margin: 0; color: var(--wptd-text); font-size: 18px; }
+.wptd-error-state p { margin: 0; color: var(--wptd-text-muted); font-size: 14px; }
+
+/* ── MODAL ─────────────────────────────────────────────────────────────────── */
+.wptd-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.4);
+        backdrop-filter: blur(3px);
+        z-index: 1000;
+        display: flex;
+        justify-content: flex-end;
+        animation: wptd-fade-in .25s ease;
+}
+
+.wptd-modal {
+        width: 100%;
+        max-width: 540px;
+        background: var(--wptd-surface);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: -8px 0 30px rgba(0,0,0,.15);
+        animation: wptd-slide-in-right .3s cubic-bezier(.4,0,.2,1);
+}
+
+.wptd-modal--settings { max-width: 480px; }
+.wptd-modal--history  { max-width: 460px; }
+
+.wptd-modal__header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        padding: 22px;
+        border-bottom: 1px solid var(--wptd-border);
+        background: var(--wptd-surface);
+}
+
+.wptd-modal__title-block { display: flex; flex-direction: column; gap: 4px; }
+
+.wptd-modal__type {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--wptd-primary);
+        background: var(--wptd-primary-soft);
+        padding: 3px 8px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        width: fit-content;
+}
+
+.wptd-modal__title { margin: 0; font-size: 19px; font-weight: 700; color: var(--wptd-text); letter-spacing: -.02em; }
+.wptd-modal__sub { font-size: 13px; color: var(--wptd-text-muted); }
+
+.wptd-modal__slug {
+        display: inline-block;
+        background: var(--wptd-surface-3);
+        color: var(--wptd-text-muted);
+        padding: 3px 9px;
+        border-radius: 5px;
+        font-size: 12.5px;
+        font-weight: 600;
+        width: fit-content;
+        font-family: var(--wptd-font-mono);
+}
+
+.wptd-modal__close {
+        background: var(--wptd-surface-3);
+        border: 1px solid var(--wptd-border);
+        width: 32px; height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        color: var(--wptd-text-muted);
+        transition: all var(--wptd-transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+}
+
+.wptd-modal__close:hover { background: var(--wptd-danger-soft); color: var(--wptd-danger); border-color: var(--wptd-danger); transform: scale(1.08); }
+.wptd-modal__close:active { transform: scale(.94); }
+
+.wptd-modal__body { flex: 1; overflow-y: auto; padding: 22px; }
+.wptd-modal__desc { font-size: 14px; color: var(--wptd-text-muted); line-height: 1.6; margin: 0 0 18px; }
+
+.wptd-modal__stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px; }
+
+.wptd-modal__stat {
+        background: var(--wptd-surface-2);
+        border: 1px solid var(--wptd-border);
+        border-radius: var(--wptd-radius);
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+}
+
+.wptd-modal__stat-label { font-size: 11px; font-weight: 700; color: var(--wptd-text-muted); text-transform: uppercase; letter-spacing: .04em; }
+.wptd-modal__stat-value { font-size: 15px; font-weight: 700; color: var(--wptd-text); }
+
+.wptd-modal__section { margin-bottom: 18px; }
+
+.wptd-modal__section-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--wptd-text);
+        margin: 0 0 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+}
+
+.wptd-modal__section-count { font-size: 12px; color: var(--wptd-text-muted); font-weight: 500; }
+
+.wptd-modal__footer {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        padding: 16px 22px;
+        border-top: 1px solid var(--wptd-border);
+        background: var(--wptd-surface);
+}
+
+.wptd-modal__loading, .wptd-history-loading { display: flex; flex-direction: column; gap: 10px; padding: 12px 0; }
+
+.wptd-modal__error {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px;
+        background: var(--wptd-danger-soft);
+        color: var(--wptd-danger);
+        border-radius: var(--wptd-radius);
+        font-size: 14px;
+        font-weight: 600;
+}
+
+/* ── FILE TREE (DetailsModal) ──────────────────────────────────────────────── */
+.wptd-tree {
+        background: var(--wptd-surface-2);
+        border: 1px solid var(--wptd-border);
+        border-radius: var(--wptd-radius);
+        padding: 8px;
+        max-height: 380px;
+        overflow-y: auto;
+}
+
+.wptd-tree__node {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 13.5px;
+        color: var(--wptd-text);
+        cursor: default;
+        transition: background var(--wptd-transition);
+}
+
+.wptd-tree__node.is-dir { cursor: pointer; font-weight: 600; }
+.wptd-tree__node:hover { background: var(--wptd-surface-3); }
+.wptd-tree__icon { font-size: 14px; flex-shrink: 0; display: flex; }
+.wptd-tree__name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wptd-tree__count { font-size: 10px; background: var(--wptd-surface-3); color: var(--wptd-text-muted); padding: 1px 6px; border-radius: 10px; font-weight: 600; }
+.wptd-tree__size { font-size: 12px; color: var(--wptd-text-soft); font-weight: 500; }
+.wptd-tree__caret { font-size: 10px; color: var(--wptd-text-muted); }
+.wptd-tree__children { padding-left: 22px; }
+.wptd-tree__node--child { padding: 4px 10px; font-weight: 400; font-size: 13px; }
+.wptd-tree__node--child.is-more { color: var(--wptd-text-soft); font-style: italic; }
+
+/* ── SETTINGS ──────────────────────────────────────────────────────────────── */
+.wptd-setting-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--wptd-border);
+}
+
+.wptd-setting-row:last-child { border-bottom: none; }
+.wptd-setting-row__label { display: flex; flex-direction: column; gap: 2px; }
+.wptd-setting-row__label strong { font-size: 14px; font-weight: 700; color: var(--wptd-text); }
+.wptd-setting-row__label span { font-size: 13px; color: var(--wptd-text-muted); }
+
+.wptd-setting-row--info {
+        background: var(--wptd-primary-soft);
+        border-radius: var(--wptd-radius);
+        padding: 12px 14px;
+        margin-top: 10px;
+        border: none;
+        flex-direction: row;
+        gap: 10px;
+        align-items: flex-start;
+        font-size: 13px;
+        color: var(--wptd-text-muted);
+        line-height: 1.5;
+}
+
+.wptd-info-icon { color: var(--wptd-primary); font-weight: 800; font-size: 14px; flex-shrink: 0; }
+
+/* Switch */
+.wptd-switch { position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; }
+.wptd-switch input { opacity: 0; width: 0; height: 0; }
+.wptd-switch__track { position: absolute; inset: 0; background: var(--wptd-border-strong); border-radius: 24px; transition: background var(--wptd-transition); }
+.wptd-switch__thumb { position: absolute; left: 2px; top: 2px; width: 20px; height: 20px; background: #fff; border-radius: 50%; transition: transform var(--wptd-transition); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.wptd-switch input:checked + .wptd-switch__track { background: var(--wptd-primary); }
+.wptd-switch input:checked + .wptd-switch__track .wptd-switch__thumb { transform: translateX(20px); }
+
+/* ── HISTORY PANEL ─────────────────────────────────────────────────────────── */
+.wptd-history-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+
+.wptd-history-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 11px;
+        background: var(--wptd-surface-2);
+        border: 1px solid var(--wptd-border);
+        border-radius: var(--wptd-radius);
+        transition: all var(--wptd-transition);
+        animation: wptd-card-in .3s ease both;
+}
+
+.wptd-history-item:hover { border-color: var(--wptd-primary); background: var(--wptd-surface-3); }
+
+.wptd-history-item__icon {
+        width: 34px; height: 34px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background: var(--wptd-primary-soft);
+        color: var(--wptd-primary);
+}
+
+.wptd-history-item__icon.theme { background: var(--wptd-purple); color: var(--wptd-purple-text); }
+
+.wptd-history-item__body { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.wptd-history-item__name { font-size: 14px; font-weight: 700; color: var(--wptd-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wptd-history-item__meta { font-size: 12px; color: var(--wptd-text-muted); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.wptd-history-item__meta code { background: var(--wptd-surface-3); padding: 1px 5px; border-radius: 3px; font-size: 11.5px; font-weight: 600; font-family: var(--wptd-font-mono); }
+
+/* ── TOASTS ────────────────────────────────────────────────────────────────── */
+.wptd-toasts {
+        position: fixed;
+        bottom: 24px; right: 24px;
+        display: flex; flex-direction: column; gap: 10px;
+        z-index: 1100;
+        max-width: 380px;
+        pointer-events: none;
+}
+
+.wptd-toast {
+        display: flex; align-items: center; gap: 10px;
+        padding: 12px 16px;
+        background: var(--wptd-surface);
+        border: 1px solid var(--wptd-border);
+        border-left: 4px solid var(--wptd-primary);
+        border-radius: var(--wptd-radius);
+        box-shadow: var(--wptd-shadow-lg);
+        font-size: 14px; font-weight: 500;
+        color: var(--wptd-text);
+        cursor: pointer;
+        pointer-events: auto;
+        animation: wptd-toast-in .3s cubic-bezier(.34,1.56,.64,1);
+        transition: all var(--wptd-transition);
+        font-family: var(--wptd-font);
+}
+
+.wptd-toast:hover { transform: translateX(-4px); }
+.wptd-toast--success { border-left-color: var(--wptd-success); }
+.wptd-toast--error   { border-left-color: var(--wptd-danger); }
+.wptd-toast--warn    { border-left-color: var(--wptd-warning); }
+.wptd-toast--info    { border-left-color: var(--wptd-primary); }
+
+.wptd-toast__icon {
+        width: 22px; height: 22px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 12px; font-weight: 800; flex-shrink: 0; color: #fff;
+}
+
+.wptd-toast--success .wptd-toast__icon { background: var(--wptd-success); }
+.wptd-toast--error .wptd-toast__icon   { background: var(--wptd-danger); }
+.wptd-toast--warn .wptd-toast__icon    { background: var(--wptd-warning); }
+.wptd-toast--info .wptd-toast__icon    { background: var(--wptd-primary); }
+
+.wptd-toast__msg { flex: 1; line-height: 1.4; }
+
+/* ── SKELETONS ─────────────────────────────────────────────────────────────── */
+.wptd-skeleton-line {
+        height: 13px;
+        background: linear-gradient(90deg, var(--wptd-surface-3) 0%, var(--wptd-surface-2) 50%, var(--wptd-surface-3) 100%);
+        background-size: 200% 100%;
+        border-radius: 5px;
+        animation: wptd-shimmer 1.5s ease-in-out infinite;
+        margin-bottom: 8px;
+}
+
+.wptd-skeleton--sm { width: 60%; }
+.wptd-skeleton--lg { width: 100%; height: 17px; }
+
+.wptd-skeleton-box {
+        background: linear-gradient(90deg, var(--wptd-surface-3) 0%, var(--wptd-surface-2) 50%, var(--wptd-surface-3) 100%);
+        background-size: 200% 100%;
+        border-radius: 7px;
+        animation: wptd-shimmer 1.5s ease-in-out infinite;
+}
+
+.wptd-skeleton--avatar { width: 44px; height: 44px; border-radius: 10px; }
+.wptd-skeleton--chip   { width: 60px; height: 22px; border-radius: 5px; }
+.wptd-skeleton--btn    { width: 100%; height: 36px; border-radius: var(--wptd-radius); margin-top: 8px; }
+
+.wptd-card--skeleton { pointer-events: none; }
+
+/* ── BUSY OVERLAY ──────────────────────────────────────────────────────────── */
+.wptd-busy-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.4);
+        backdrop-filter: blur(2px);
+        z-index: 1200;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: wptd-fade-in .2s ease;
+}
+
+.wptd-busy-card {
+        background: var(--wptd-surface);
+        padding: 26px 34px;
+        border-radius: var(--wptd-radius-lg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        box-shadow: var(--wptd-shadow-lg);
+}
+
+.wptd-busy-card p { margin: 0; font-size: 14px; font-weight: 600; color: var(--wptd-text); }
+.wptd-busy-card .wptd-btn-spinner { border-color: rgba(30,126,52,.2); border-top-color: var(--wptd-primary); }
+
+/* ── FOOTER BAR ────────────────────────────────────────────────────────────── */
+.wptd-footer-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 24px;
+        padding-top: 16px;
+        border-top: 1px solid var(--wptd-border);
+        flex-wrap: wrap;
+        gap: 12px;
+}
+
+.wptd-footer-bar__info { font-size: 12.5px; color: var(--wptd-text-soft); font-weight: 500; }
+
+/* ── ANIMATIONS ────────────────────────────────────────────────────────────── */
+@keyframes wptd-spin { to { transform: rotate(360deg); } }
+@keyframes wptd-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes wptd-fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes wptd-slide-in-right { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes wptd-pop-in { 0% { opacity: 0; transform: scale(.85); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes wptd-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(1.3); } }
+@keyframes wptd-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+@keyframes wptd-toast-in { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+
+/* ── SCROLLBAR ─────────────────────────────────────────────────────────────── */
+.wptd-modal__body::-webkit-scrollbar,
+.wptd-tree::-webkit-scrollbar,
+.wptd-explorer__body::-webkit-scrollbar,
+.wptd-gsearch__list::-webkit-scrollbar { width: 8px; }
+.wptd-modal__body::-webkit-scrollbar-track,
+.wptd-tree::-webkit-scrollbar-track { background: transparent; }
+.wptd-modal__body::-webkit-scrollbar-thumb,
+.wptd-tree::-webkit-scrollbar-thumb,
+.wptd-explorer__body::-webkit-scrollbar-thumb,
+.wptd-gsearch__list::-webkit-scrollbar-thumb { background: var(--wptd-border-strong); border-radius: 4px; }
+.wptd-modal__body::-webkit-scrollbar-thumb:hover { background: var(--wptd-text-soft); }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   CODE EDITOR — VS Code-like layout
+───────────────────────────────────────────────────────────────────────────── */
+
+.wptd-editor-view {
+        display: flex;
+        flex-direction: column;
+        background: var(--wptd-surface);
+        border: 1px solid var(--wptd-border);
+        border-radius: var(--wptd-radius-lg);
+        overflow: hidden;
+        box-shadow: var(--wptd-shadow-sm);
+        /* Height calc breakdown (WP admin desktop):
+         *   100vh                                  = full viewport
+         *   - 32px                                 = WP admin bar
+         *   - 20px                                 = .wrap bottom padding
+         *   - 28px + 28px                          = .wptd-body padding (top + bottom)
+         *   - ~120px                               = our Header (brand row + tabs)
+         *   - ~26px                                = editor switcher bar
+         *   - ~46px                                = editor mode pills row
+         *   - 28px                                 = margin between body and editor
+         *   - 20px                                 = safety buffer
+         * ≈ 100vh - 348px on desktop. On mobile WP admin the admin bar
+         *   is taller, so we use a media query below.
+         */
+         max-height: 670px !important;
+
+}
+
+/* When a pane is fullscreen, the editor-view collapses to give the page back
+   its scroll room (the promoted pane is position:fixed on top).
+
+   IMPORTANT: never put `opacity` or `pointer-events: none` on this element.
+   The promoted fullscreen pane AND the exit bar are DESCENDANTS of
+   .wptd-editor-view, so opacity dims the whole fullscreen UI,
+   pointer-events:none makes it completely unclickable, and opacity < 1
+   creates a stacking context that traps the pane's z-index BELOW the
+   WP admin bar (#wpadminbar, z-index 99999). This was the "fullscreen
+   is not working" bug. */
+.wptd-editor-view.has-fullscreen {
+        min-height: 0;
+        max-height: none;
+}
+
+/* Lock page scroll while a pane is fullscreen (class toggled from JS). */
+html.wptd-fs-lock,
+body.wptd-fs-lock {
+        overflow: hidden !important;
+}
+
+/* Auto mode (downloader) needs a more generous min-height so the stats + grid
+   have room even on shorter screens. We let the page scroll naturally — the
+   editor is the only thing that has its own internal scroll. */
+.wptd-page:not(:has(.wptd-editor-view)) .wptd-body,
+.wptd-page .wptd-body {
+        min-height: calc(100vh - 100px);
+}
+
+/* Switcher bar */
+.wptd-editor-switcher {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 18px;
+        background: var(--wptd-surface-2);
+        border-bottom: 1px solid var(--wptd-border);
+        position: relative;
+}
+
+.wptd-editor-switcher__info { display: flex; align-items: center; gap: 12px; }
+
+.wptd-editor-switcher__actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+
+.wptd-editor-switcher__icon {
+        width: 36px; height: 36px;
+        background: var(--wptd-primary-soft);
+        color: var(--wptd-primary);
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+}
+
+.wptd-editor-switcher__text { display: flex; flex-direction: column; gap: 1px; }
+
+.wptd-editor-switcher__label {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--wptd-text-muted);
+        text-transform: uppercase;
+        letter-spacing: .05em;
+}
+
+.wptd-editor-switcher__slug {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--wptd-surface);
+        border: 1px solid var(--wptd-border);
+        color: var(--wptd-text);
+        font-size: 14px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all var(--wptd-transition);
+        font-family: var(--wptd-font);
+}
+
+.wptd-editor-switcher__slug:hover { background: var(--wptd-primary-soft); border-color: var(--wptd-primary); color: var(--wptd-primary); }
+
+.wptd-editor-switcher__caret { font-size: 10px; color: var(--wptd-text-muted); }
+
+/* Mode pills row (above picker) */
+.wptd-editor-mode-pills {
+        display: flex;
+        gap: 6px;
+        padding: 12px 18px 12px !important;
+        background: var(--wptd-surface-2);
+        border-bottom: 1px solid var(--wptd-border);
+}
+
+.wptd-editor-mode-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: none;
+        border: 1px solid var(--wptd-border);
+        color: var(--wptd-text-muted);
+        font-size: 13px;
+        font-weight: 600;
+        padding: 7px 14px;
+        border-radius: 7px;
+        cursor: pointer;
+        transition: all var(--wptd-transition);
+        font-family: var(--wptd-font);
+}
+
+.wptd-editor-mode-pill:hover { background: var(--wptd-surface); color: var(--wptd-text); }
+.wptd-editor-mode-pill.is-active {
+        background: var(--wptd-primary);
+        color: #fff;
+        border-color: var(--wptd-primary);
+}
+
+/* Target picker dropdown */
+.wptd-editor-picker {
+        position: absolute;
+        top: calc(100% - 1px);
+        left: 16px;
+        right: 16px;
+        max-width: 540px;
+        background: var(--wptd-surface);
+        border: 1px solid var(--wptd-border);
+        border-radius: var(--wptd-radius-lg);
+        box-shadow: var(--wptd-shadow-lg);
+        z-index: 50;
+        overflow: hidden;
+        animation: wptd-fade-up .2s ease;
+}
+
+.wptd-editor-picker__search { padding: 12px; border-bottom: 1px solid var(--wptd-border); }
+.wptd-editor-picker__search input {
+        width: 100%;
+        padding: 8px 12px;
+        background: var(--wptd-surface-3);
+        border: 1px solid var(--wptd-border);
+        border-radius: 6px;
+        font-size: 14px;
+        outline: none;
+        color: var(--wptd-text);
+        font-family: var(--wptd-font);
+}
+
+.wptd-editor-picker__list { max-height: 360px; overflow-y: auto; }
+
+.wptd-editor-picker__item {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        text-align: left;
+        transition: background var(--wptd-transition);
+        font-family: var(--wptd-font);
+        color: var(--wptd-text);
+}
+
+.wptd-editor-picker__item:hover { background: var(--wptd-primary-soft); }
+.wptd-editor-picker__item.is-active { background: var(--wptd-primary-soft); color: var(--wptd-primary); }
+
+.wptd-editor-picker__icon { color: var(--wptd-text-muted); flex-shrink: 0; display: flex; }
+.wptd-editor-picker__item.is-active .wptd-editor-picker__icon { color: var(--wptd-primary); }
+.wptd-editor-picker__name { font-weight: 700; flex: 1; font-size: 14px; }
+.wptd-editor-picker__slug { font-size: 12px; color: var(--wptd-text-muted); font-family: var(--wptd-font-mono); }
+
+/* Main layout */
+.wptd-editor-layout {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+}
+
+.wptd-editor-sidebar {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+        border-right: 1px solid var(--wptd-border);
+        background: var(--wptd-surface-2);
+        overflow: hidden;
+}
+
+/* ── CSS-promoted fullscreen (single-instance) ──────────────────────────────
+   Instead of rendering a DUPLICATE CodeEditor / FileExplorer in a separate
+   fullscreen layer (which caused CodeMirror race conditions and the
+   "Cannot read properties of undefined (reading 'prev')" crash), we keep
+   the SAME component instances and promote them to position:fixed via CSS.
+
+   The WHOLE .wptd-editor-layout (sidebar + editor together, like VS Code)
+   gets .is-fullscreen and is pinned to the viewport — the file tree stays
+   on the left and the code editor stays visible on the right. Because the
+   component instances never remount, CodeMirror state (cursor, scroll,
+   undo history) is preserved perfectly when entering / exiting fullscreen.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.wptd-editor-layout.is-fullscreen {
+        position: fixed;
+        inset: 0;
+        z-index: 100100;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        max-height: none !important;
+        margin: 0;
+        background: var(--wptd-surface);
+        border-radius: 0;
+        /* Room for the floating exit bar */
+        padding-top: 48px;
+        box-sizing: border-box;
+        display: grid;
+        grid-template-columns: minmax(240px, 320px) 1fr;
+}
+
+/* Both panes fill the promoted layout's full height. */
+.wptd-editor-layout.is-fullscreen .wptd-editor-sidebar,
+.wptd-editor-layout.is-fullscreen .wptd-editor-main {
+        height: 100%;
+        min-height: 0;
+}
+
+.wptd-editor-layout.is-fullscreen .wptd-explorer {
+        height: 100% !important;
+        max-height: none !important;
+        margin-top: 0;
+}
+
+/* Tabs keep natural height; the editor flexes to fill the rest so the
+   status bar is never pushed off-screen. */
+.wptd-editor-layout.is-fullscreen .wptd-editor {
+        flex: 1 1 auto;
+        min-height: 0;
+        height: auto !important;
+}
+
+.wptd-editor-main {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+}
+
+/* ── Explorer ──────────────────────────────────────────────────────────────── */
+.wptd-explorer {
+        display: flex;
+        flex-direction: column;
+        background: var(--wptd-surface-2);
+        min-height: 0;
+        height: 100%;
+        overflow: hidden;
+}
+
+.wptd-explorer__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--wptd-border);
+        background: var(--wptd-surface);
+        flex-shrink: 0;
+}
+
+.wptd-explorer__title { display: flex; align-items: center; gap: 8px; min-width: 0; }
+
+.wptd-explorer__icon { color: var(--wptd-primary); display: flex; }
+
+.wptd-explorer__slug {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--wptd-text);
+        font-family: var(--wptd-font-mono);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+}
+
+.wptd-explorer__actions { display: flex; gap: 4px; }
+
+.wptd-explorer__btn {
+        width: 30px; height: 30px;
+        display: flex; align-items: center; justify-content: center;
+        background: none;
+        border: 1px solid transparent;
+        color: var(--wptd-text-muted);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all var(--wptd-transition);
+}
+
+.wptd-explorer__btn:hover { background: var(--wptd-primary-soft); color: var(--wptd-primary); border-color: var(--wptd-border); }
+
+.wptd-explorer__btn--fs { background: var(--wptd-surface-3); }
+.wptd-explorer__btn--fs:hover { background: var(--wptd-primary); color: #fff; border-color: var(--wptd-primary); }
+
+.wptd-explorer__body {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 8px 6px;
+        min-height: 0;
+}
+
+.wptd-explorer__loading { padding: 12px; }
+.wptd-explorer__error, .wptd-explorer__empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 24px 12px;
+        text-align: center;
+        color: var(--wptd-text-muted);
+        font-size: 13px;
+}
+.wptd-explorer__error .wptd-icon, .wptd-explorer__empty .wptd-icon { color: var(--wptd-text-soft); }
+
+.wptd-explorer__footer {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 9px 14px;
+        border-top: 1px solid var(--wptd-border);
+        background: var(--wptd-surface);
+        font-size: 12px;
+        color: var(--wptd-text-muted);
+        flex-shrink: 0;
+}
+
+.wptd-explorer__dot { color: var(--wptd-text-soft); }
+
+/* Tree rows */
+.wptd-tree-list { display: flex; flex-direction: column; gap: 1px; }
+
+.wptd-tree-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 8px;
+        border-radius: 6px;
+        font-size: 13.5px;
+        color: var(--wptd-text);
+        cursor: pointer;
+        transition: background var(--wptd-transition);
+        user-select: none;
+}
+
+.wptd-tree-row:hover { background: var(--wptd-surface-3); }
+.wptd-tree-row.is-active { background: var(--wptd-primary-soft); color: var(--wptd-primary); font-weight: 600; }
+.wptd-tree-row.is-dir { font-weight: 600; }
+.wptd-tree-row--more { font-style: italic; color: var(--wptd-text-soft); cursor: default; }
+.wptd-tree-row--more:hover { background: none; }
+
+.wptd-tree-row__caret {
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--wptd-text-muted);
+        flex-shrink: 0;
+        border-radius: 3px;
+        transition: background .15s, color .15s;
+}
+.wptd-tree-row__caret:hover { background: var(--wptd-surface-3); color: var(--wptd-text); }
+.wptd-tree-row.is-dir .wptd-tree-row__caret { cursor: pointer; }
+.wptd-tree-row__icon { flex-shrink: 0; display: flex; }
+.wptd-tree-row__name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Editor tabs ───────────────────────────────────────────────────────────── */
+.wptd-editor-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
+        background: var(--wptd-surface-2);
+        border-bottom: 1px solid var(--wptd-border);
+        scrollbar-width: thin;
+        min-height: 42px;
+        max-height: 126px;
+        overflow-y: none !important;
+        overflow-x: none !important;
+        flex-shrink: 0;
+}
+.wptd-editor-tabs{overflow-x:none !important;overflow-y:none !important; }
+.wptd-editor-tabs::-webkit-scrollbar { width: 6px; }
+.wptd-editor-tabs::-webkit-scrollbar-thumb { background: var(--wptd-border-strong); border-radius: 3px; }
+
+.wptd-tab-file {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        background: var(--wptd-surface-2);
+        border-right: 1px solid var(--wptd-border);
+        color: var(--wptd-text-muted);
+        font-size: 13.5px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--wptd-transition);
+        white-space: nowrap;
+        position: relative;
+        font-family: var(--wptd-font);
+}
+
+.wptd-tab-file:hover { background: var(--wptd-surface-3); color: var(--wptd-text); }
+
+.wptd-tab-file.is-active {
+        background: var(--wptd-surface);
+        color: var(--wptd-primary);
+        border-bottom: 2px solid var(--wptd-primary);
+        margin-bottom: -1px;
+}
+
+.wptd-tab-file__icon { display: flex; }
+.wptd-tab-file__name { max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+
+.wptd-tab-file__close {
+        width: 18px; height: 18px;
+        background: none;
+        border: none;
+        color: var(--wptd-text-muted);
+        cursor: pointer;
+        border-radius: 3px;
+/*         display: flex;
+        align-items: center;
+        justify-content: center; */
+        transition: all var(--wptd-transition);
+}
+
+.wptd-tab-file__close:hover { background: var(--wptd-danger-soft); color: var(--wptd-danger); }
+.wptd-tab-file.is-active .wptd-tab-file__close { color: var(--wptd-primary); }
+
+.wptd-tab-file__dirty-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--wptd-warning);
+        display: block;
+        transition: transform var(--wptd-transition);
+}
+.wptd-tab-file__close:hover .wptd-tab-file__dirty-dot { transform: scale(1.2); background: var(--wptd-danger); }
+
+/* ── Code editor ───────────────────────────────────────────────────────────── */
+.wptd-editor {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        background: var(--wptd-surface);
+        overflow: hidden;
+}
+
+.wptd-editor__main {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        position: relative;
+        background: #1e1e2e;
+}
+
+.wptd-editor__loading { padding: 18px 24px; background: var(--wptd-surface); }
+
+.wptd-editor__error {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 50px 24px;
+        text-align: center;
+        background: var(--wptd-surface);
+}
+
+.wptd-editor__error .wptd-icon { color: var(--wptd-warning); }
+.wptd-editor__error h4 { margin: 0; color: var(--wptd-text); font-size: 16px; }
+.wptd-editor__error p { margin: 0; color: var(--wptd-text-muted); font-size: 14px; max-width: 420px; }
+
+.wptd-editor__cm {
+        flex: 1;
+        min-height: 0;
+        height: 100%;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        background: #1e1e2e;
+}
+.wptd-editor__cm > .CodeMirror {
+        height: 100% !important;
+        flex: 1;
+        min-height: 0;
+}
+
+.wptd-editor__cm .CodeMirror {
+        height: 100% !important;
+        font-family: var(--wptd-font-mono);
+        font-size: 14px;
+        line-height: 1.65;
+}
+
+/* Status bar */
+.wptd-editor__statusbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 6px 14px;
+        background: var(--wptd-primary);
+        color: #fff;
+        font-size: 12.5px;
+        font-weight: 600;
+        flex-shrink: 0;
+}
+
+.wptd-statusbar__left, .wptd-statusbar__right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: nowrap;
+        overflow: hidden;
+}
+
+.wptd-statusbar__item { display: inline-flex; align-items: center; gap: 4px; color: rgba(255,255,255,.92); white-space: nowrap; }
+.wptd-statusbar__item--warn { color: #fff3cd; }
+.wptd-statusbar__dot { color: rgba(255,255,255,.5); }
+
+.wptd-statusbar__btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: rgba(255,255,255,.15);
+        border: none;
+        color: #fff;
+        padding: 10px 15px;
+        border-radius: 5px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--wptd-transition);
+        font-family: var(--wptd-font);
+}
+
+.wptd-statusbar__btn:hover { background: rgba(255,255,255,.25); }
+.wptd-statusbar__btn.is-active { background: rgba(255,255,255,.35); }
+.wptd-statusbar__btn--fs { background: rgba(255,255,255,.18); }
+.wptd-statusbar__btn--fs:hover { background: rgba(255,255,255,.32); }
+.wptd-statusbar__btn--primary { background: #fff; color: var(--wptd-primary); }
+.wptd-statusbar__btn--primary:hover { background: var(--wptd-primary-soft); }
+.wptd-statusbar__btn--primary.is-dirty { background: var(--wptd-warning); color: #212529; animation: wptd-pulse 2s ease-in-out infinite; }
+.wptd-statusbar__btn--primary:disabled { opacity: .6; cursor: not-allowed; animation: none; }
+.wptd-statusbar__btn--primary.is-busy { background: rgba(255,255,255,.6); cursor: wait; }
+.wptd-statusbar__btn .wptd-btn-spinner { border-color: rgba(30,126,52,.2); border-top-color: var(--wptd-primary); }
+
+/* Empty state */
+.wptd-editor-empty {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        padding: 50px 24px;
+        text-align: center;
+        background: var(--wptd-surface);
+        color: var(--wptd-text-muted);
+}
+
+.wptd-editor-empty__art { color: var(--wptd-text-soft); display: flex; }
+.wptd-editor-empty h3 { margin: 0; color: var(--wptd-text); font-size: 19px; font-weight: 700; }
+.wptd-editor-empty p { margin: 0; max-width: 460px; font-size: 14.5px; line-height: 1.6; }
+
+.wptd-editor-empty__hints { display: flex; gap: 12px; margin-top: 10px; flex-wrap: wrap; justify-content: center; }
+
+.wptd-hint {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        padding: 10px 14px;
+        background: var(--wptd-surface-2);
+        border: 1px solid var(--wptd-border);
+        border-radius: var(--wptd-radius);
+        min-width: 120px;
+}
+
+.wptd-hint kbd {
+        background: var(--wptd-surface-3);
+        border: 1px solid var(--wptd-border-strong);
+        border-bottom-width: 2px;
+        border-radius: 4px;
+        padding: 3px 7px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--wptd-text);
+        font-family: var(--wptd-font-mono);
+}
+
+.wptd-hint span { font-size: 12px; color: var(--wptd-text-muted); font-weight: 500; }
+
+/* ── Global search panel ───────────────────────────────────────────────────── */
+.wptd-editor-search-panel {
+        width: 400px;
+        border-left: 1px solid var(--wptd-border);
+        background: var(--wptd-surface-2);
+        display: flex;
+        flex-direction: column;
+        animation: wptd-fade-in .25s ease;
+        min-height: 0;
+}
+
+.wptd-gsearch { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+
+.wptd-gsearch__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--wptd-border);
+        background: var(--wptd-surface);
+}
+
+.wptd-gsearch__title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--wptd-text);
+        text-transform: uppercase;
+        letter-spacing: .04em;
+}
+
+.wptd-gsearch__input-wrap {
+        position: relative;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--wptd-border);
+        background: var(--wptd-surface-2);
+}
+
+.wptd-gsearch__input {
+        width: 100%;
+        padding: 9px 78px 9px 12px;
+        background: var(--wptd-surface);
+        border: 1px solid var(--wptd-border);
+        border-radius: 6px;
+        color: var(--wptd-text);
+        font-size: 13.5px;
+        outline: none;
+        transition: all var(--wptd-transition);
+        font-family: var(--wptd-font);
+        box-sizing: border-box;
+}
+
+.wptd-gsearch__input:focus { border-color: var(--wptd-primary); box-shadow: 0 0 0 3px var(--wptd-primary-softer); }
+
+.wptd-gsearch__toggles {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        gap: 4px;
+}
+
+.wptd-gsearch__toggle {
+        width: 28px; height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--wptd-surface-3);
+        border: 1px solid var(--wptd-border);
+        border-radius: 5px;
+        color: var(--wptd-text-muted);
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all var(--wptd-transition);
+        font-family: var(--wptd-font-mono);
+}
+
+.wptd-gsearch__toggle:hover { color: var(--wptd-text); }
+.wptd-gsearch__toggle.is-active { background: var(--wptd-primary); color: #fff; border-color: var(--wptd-primary); }
+
+.wptd-gsearch__loading, .wptd-gsearch__empty, .wptd-gsearch__error {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 16px;
+        color: var(--wptd-text-muted);
+        font-size: 13.5px;
+}
+
+.wptd-gsearch__empty, .wptd-gsearch__error { flex-direction: column; text-align: center; }
+
+.wptd-gsearch__summary {
+        padding: 9px 14px;
+        background: var(--wptd-primary-soft);
+        color: var(--wptd-primary);
+        font-size: 13px;
+        font-weight: 600;
+        border-bottom: 1px solid var(--wptd-border);
+}
+
+.wptd-gsearch__summary strong { font-weight: 800; }
+
+.wptd-gsearch__truncated { font-size: 11px; color: var(--wptd-warning); margin-left: 6px; }
+
+.wptd-gsearch__list { flex: 1; overflow-y: auto; padding: 8px; min-height: 0; }
+
+.wptd-gsearch__file { margin-bottom: 4px; }
+
+.wptd-gsearch__file-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background var(--wptd-transition);
+}
+
+.wptd-gsearch__file-head:hover { background: var(--wptd-surface-3); }
+
+.wptd-gsearch__caret { color: var(--wptd-text-muted); width: 12px; display: flex; }
+.wptd-gsearch__file-icon { display: flex; }
+.wptd-gsearch__file-name { font-weight: 700; font-size: 13px; color: var(--wptd-text); }
+.wptd-gsearch__file-path {
+        font-size: 12px;
+        color: var(--wptd-text-muted);
+        font-family: var(--wptd-font-mono);
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+}
+
+.wptd-gsearch__file-count {
+        background: var(--wptd-primary);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 10px;
+        min-width: 18px;
+        text-align: center;
+}
+
+.wptd-gsearch__hits {
+        list-style: none;
+        padding: 0 0 0 26px;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+}
+
+.wptd-gsearch__hit {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background var(--wptd-transition);
+}
+
+.wptd-gsearch__hit:hover { background: var(--wptd-primary-soft); }
+
+.wptd-gsearch__line {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--wptd-text-soft);
+        background: var(--wptd-surface-3);
+        padding: 2px 6px;
+        border-radius: 3px;
+        flex-shrink: 0;
+        min-width: 32px;
+        text-align: center;
+        font-family: var(--wptd-font-mono);
+}
+
+.wptd-gsearch__preview {
+        flex: 1;
+        font-family: var(--wptd-font-mono);
+        font-size: 12px;
+        color: var(--wptd-text);
+        background: var(--wptd-surface-3);
+        padding: 4px 8px;
+        border-radius: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+}
+
+.wptd-gsearch__preview mark { background: var(--wptd-warning); color: #212529; padding: 0 2px; border-radius: 2px; font-weight: 700; }
+
+/* ── Context menu ──────────────────────────────────────────────────────────── */
+.wptd-ctx-menu {
+        position: fixed;
+        background: var(--wptd-surface);
+        border: 1px solid var(--wptd-border);
+        border-radius: var(--wptd-radius);
+        box-shadow: var(--wptd-shadow-lg);
+        padding: 5px;
+        min-width: 190px;
+        z-index: 1500;
+        animation: wptd-pop-in .12s ease;
+}
+
+.wptd-ctx-item {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        background: none;
+        border: none;
+        color: var(--wptd-text);
+        font-size: 13.5px;
+        font-weight: 600;
+        cursor: pointer;
+        border-radius: 5px;
+        transition: background var(--wptd-transition);
+        font-family: var(--wptd-font);
+        text-align: left;
+}
+
+.wptd-ctx-item:hover { background: var(--wptd-primary-soft); color: var(--wptd-primary); }
+.wptd-ctx-item--danger:hover { background: var(--wptd-danger-soft); color: var(--wptd-danger); }
+.wptd-ctx-item .wptd-icon { flex-shrink: 0; }
+
+.wptd-ctx-sep { height: 1px; background: var(--wptd-border); margin: 4px 8px; }
+
+/* ── Prompt dialog ─────────────────────────────────────────────────────────── */
+.wptd-prompt-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.4);
+        backdrop-filter: blur(3px);
+        z-index: 1300;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: wptd-fade-in .2s ease;
+}
+
+.wptd-prompt {
+        background: var(--wptd-surface);
+        border: 1px solid var(--wptd-border);
+        border-radius: var(--wptd-radius-lg);
+        box-shadow: var(--wptd-shadow-lg);
+        padding: 22px;
+        width: 100%;
+        max-width: 420px;
+        animation: wptd-pop-in .25s cubic-bezier(.34,1.56,.64,1);
+}
+
+.wptd-prompt h3 { margin: 0 0 14px; font-size: 17px; font-weight: 700; color: var(--wptd-text); }
+
+.wptd-prompt__input {
+        width: 100%;
+        padding: 10px 14px;
+        background: var(--wptd-surface-3);
+        border: 1px solid var(--wptd-border);
+        border-radius: 6px;
+        color: var(--wptd-text);
+        font-size: 14px;
+        outline: none;
+        transition: all var(--wptd-transition);
+        font-family: var(--wptd-font-mono);
+        box-sizing: border-box;
+}
+
+
+.wptd-prompt__actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+/* ── FULLSCREEN EXIT BAR (floating overlay) ──────────────────────────────────
+   This is the thin green bar that floats at the top of the viewport when
+   a pane is in fullscreen mode.  It contains the pane title and an
+   "Exit fullscreen" button (also closable with Esc).
+
+   The pane itself is promoted to position:fixed via the
+   .is-fs-explorer / .is-fs-editor classes on .wptd-editor-layout above;
+   this bar is a SEPARATE fixed element rendered on top of it.
+   ────────────────────────────────────────────────────────────────────────── */
+.wptd-fullscreen-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100200; /* one above the promoted pane (100100) */
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 0 22px;
+        background: linear-gradient(135deg, #064e3b 0%, #059669 55%, #10b981 100%);
+        color: #fff;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, .2);
+        animation: wptd-fade-in .15s ease;
+}
+
+.wptd-fullscreen-bar__title {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: -.005em;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, .15);
+}
+
+.wptd-fullscreen-bar__exit {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, .18);
+        border: 1px solid rgba(255, 255, 255, .3);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 7px 14px;
+        border-radius: 7px;
+        cursor: pointer;
+        transition: all var(--wptd-transition);
+        font-family: var(--wptd-font);
+        backdrop-filter: blur(4px);
+}
+
+.wptd-fullscreen-bar__exit:hover {
+        background: rgba(255, 255, 255, .3);
+        transform: translateY(-1px);
+}
+
+.wptd-fullscreen-bar__exit kbd {
+        background: rgba(0, 0, 0, .25);
+        border: 1px solid rgba(255, 255, 255, .2);
+        border-bottom-width: 2px;
+        border-radius: 4px;
+        padding: 2px 7px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #fff;
+        font-family: var(--wptd-font-mono);
+}
+
+/* ── CodeMirror tweaks ─────────────────────────────────────────────────────── */
+.wptd-editor__cm .CodeMirror { background: #1e1e2e; color: #cdd6f4; }
+.wptd-editor__cm .CodeMirror-gutters { background: #181825; border-right: 1px solid #313244; }
+.wptd-editor__cm .CodeMirror-linenumber { color: #7f849c; }
+.wptd-editor__cm .CodeMirror-cursor { border-left-color: #d4edda !important; }
+.wptd-editor__cm .CodeMirror-selected { background: rgba(30,126,52,.30) !important; }
+.wptd-editor__cm .CodeMirror-focused .CodeMirror-selected { background: rgba(30,126,52,.40) !important; }
+.wptd-editor__cm .CodeMirror-foldmarker { background: var(--wptd-primary); color: #fff; border: none; border-radius: 4px; padding: 0 6px; font-size: 11px; }
+.wptd-editor__cm .CodeMirror-search-match { background: var(--wptd-warning); color: #212529; }
+
+.wptd-editor__cm .CodeMirror-dialog {
+        background: var(--wptd-surface);
+        border-bottom: 1px solid var(--wptd-border);
+        padding: 8px 12px;
+        color: var(--wptd-text);
+        font-size: 13px;
+}
+
+.wptd-editor__cm .CodeMirror-dialog input {
+        background: var(--wptd-surface-3);
+        border: 1px solid var(--wptd-border);
+        border-radius: 5px;
+        padding: 4px 8px;
+        color: var(--wptd-text);
+        font-size: 13px;
+        outline: none;
+        font-family: var(--wptd-font);
+}
+
+/* ── Icon utility ──────────────────────────────────────────────────────────── */
+.wptd-icon { display: inline-flex; vertical-align: middle; }
+.wptd-file-icon { display: inline-flex; vertical-align: middle; }
+
+
+/* ── GLOBAL SEARCH POPUP ───────────────────────────────────────────────────── */
+.wptd-search-popup-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.5);
+        backdrop-filter: blur(4px);
+        z-index: 1500;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 80px;
+        animation: wptd-fade-in .2s ease;
+}
+
+.wptd-search-popup {
+        width: 90%;
+        max-width: 640px;
+        max-height: calc(100vh - 160px);
+        background: var(--wptd-surface);
+        border: 1px solid var(--wptd-border);
+        border-radius: var(--wptd-radius-lg);
+        box-shadow: var(--wptd-shadow-lg);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        animation: wptd-pop-in .25s cubic-bezier(.34,1.56,.64,1);
+}
+
+.wptd-search-popup .wptd-gsearch {
+        height: 100%;
+        max-height: calc(100vh - 160px);
+}
+
+/* ── RESPONSIVE ────────────────────────────────────────────────────────────── */
+@media ( max-width: 1400px ) {
+        .wptd-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media ( max-width: 1100px ) {
+        .wptd-header__search { width: 260px; }
+        .wptd-search-kbd { display: none; }
+        .wptd-search-input { padding-right: 38px !important; }
+        .wptd-editor-layout { grid-template-columns: 280px 1fr; }
+        .wptd-editor-search-panel { display: none; }
+}
+
+@media ( max-width: 960px ) {
+        .wptd-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .wptd-toolbar { flex-wrap: wrap; gap: 10px; }
+        .wptd-header__search { width: 200px; }
+        /* Taller mobile WP admin bar (~46px) means more chrome — shrink the
+           editor a bit more so it still fits without page scroll. */
+        .wptd-editor-view {
+                min-height: calc(100vh - 360px);
+                max-height: calc(100vh - 360px);
+        }
+}
+
+@media ( max-width: 782px ) {
+        .wptd-header { padding: 0 16px; top: 46px; }
+        .wptd-header__top { padding: 10px 0; }
+        .wptd-header__search { width: 100%; order: 3; }
+        .wptd-header__actions { flex: 1; justify-content: flex-end; }
+        .wptd-search-input { padding-right: 40px !important; }
+        .wptd-body { padding: 18px 14px 32px; }
+        .wptd-grid { grid-template-columns: 1fr; }
+        .wptd-tab { padding: 8px 13px; font-size: 13px; }
+        .wptd-tab__hint { display: none; }
+        .wptd-mode-switch { margin: 0 4px; }
+        .wptd-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .wptd-modal { max-width: 100%; }
+        .wptd-modal__stats { grid-template-columns: 1fr; }
+        .wptd-table { font-size: 13px; }
+        .wptd-col-slug, .wptd-col-mtime { display: none; }
+        .wptd-brand__ver { display: none; }
+        .wptd-brand__title { font-size: 18px; }
+        .wptd-brand__sub { font-size: 12px; }
+        .wptd-toasts { bottom: 12px; right: 12px; left: 12px; max-width: none; }
+        .wptd-editor-layout { grid-template-columns: 1fr; }
+        .wptd-explorer { max-height: 320px; }
+        .wptd-editor-mode-pills { overflow-x: auto; }
+        .wptd-fullscreen-bar { padding: 0 14px; }
+        .wptd-fullscreen-bar__exit { font-size: 12px; padding: 5px 10px; }
+        .wptd-fullscreen-bar__exit kbd { display: none; } /* save space on mobile */
+        /* On mobile, fullscreen fills the whole viewport; the file tree
+           stacks above the editor instead of side-by-side. */
+        .wptd-editor-layout.is-fullscreen {
+                height: 100vh !important;
+                height: 100dvh !important;
+                grid-template-columns: 1fr;
+                grid-template-rows: minmax(120px, 34vh) 1fr;
+        }
+        .wptd-editor-layout.is-fullscreen .wptd-explorer {
+                height: 100% !important;
+                max-height: none !important; /* override the 320px mobile cap */
+        }
+        .wptd-editor-layout.is-fullscreen .wptd-editor {
+                height: auto !important;
+        }
+        /* On mobile WP admin (admin bar 46px) the editor needs to shrink
+           more so it doesn't push the page into vertical scroll. */
+        .wptd-editor-view {
+                min-height: calc(100vh - 420px);
+                max-height: calc(100vh - 420px);
+        }
+}
+
+@media ( max-width: 600px ) {
+        .wptd-stats { grid-template-columns: minmax(0, 1fr); }
+        .wptd-tabs { overflow-x: auto; }
+        .wptd-tab__count { display: none; }
+}
+
+@media ( max-width: 480px ) {
+        .wptd-stats { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ── ACCESSIBILITY: visible focus rings on every interactive element ─────── */
+#wptd-root a:focus-visible,
+#wptd-root button:focus-visible,
+#wptd-root input:focus-visible,
+#wptd-root select:focus-visible,
+#wptd-root textarea:focus-visible,
+#wptd-root [role="button"]:focus-visible,
+#wptd-root [tabindex]:focus-visible {
+        outline: 2px solid var(--wptd-primary);
+        outline-offset: 2px;
+        border-radius: var(--wptd-radius-sm);
+}
+#wptd-root .wptd-card:focus-visible,
+#wptd-root .wptd-modal__close:focus-visible,
+#wptd-root .wptd-icon-btn:focus-visible {
+        outline: 2px solid var(--wptd-primary);
+        outline-offset: 2px;
+}
+
+/* ── PERFORMANCE ──────────────────────────────────────────────────────────── */
+.wptd-stat,
+.wptd-card,
+.wptd-toast,
+.wptd-tree-row,
+.wptd-tab-file {
+        contain: layout paint;
+}
+.wptd-card:hover,
+.wptd-stat:hover,
+.wptd-tab::after {
+        will-change: transform;
+}
+
+/* ── MOTION PREFERENCES ───────────────────────────────────────────────────── */
+@media ( prefers-reduced-motion: reduce ) {
+        #wptd-root *,
+        #wptd-root *::before,
+        #wptd-root *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+                scroll-behavior: auto !important;
+        }
+        .wptd-card { animation: none !important; }
+        /* Hide the decorative blobs entirely for reduced-motion users — they
+           add visual noise without informational value. */
+        .wptd-header__aurora,
+        .wptd-page::before { display: none !important; }
+}
+
+/* ── THIN SCROLLBARS EVERYWHERE ───────────────────────────────────────────── */
+#wptd-root * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--wptd-border-strong) transparent;
+}
+#wptd-root *::-webkit-scrollbar { width: 8px; height: 8px; }
+#wptd-root *::-webkit-scrollbar-track { background: transparent; }
+#wptd-root *::-webkit-scrollbar-thumb {
+        background: var(--wptd-border-strong);
+        border-radius: 4px;
+}
+#wptd-root *::-webkit-scrollbar-thumb:hover { background: var(--wptd-text-soft); }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   CONFIRM DIALOG (replaces native confirm() / alert())
+   ────────────────────────────────────────────────────────────────────────── */
+.wptd-confirm-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, .5);
+        backdrop-filter: blur(4px);
+        z-index: 1100; /* above .wptd-modal-overlay (1000) */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        animation: wptd-fade-in .2s ease;
+}
+
+.wptd-confirm {
+        background: var(--wptd-surface);
+        border-radius: var(--wptd-radius-lg);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, .25), 0 4px 12px rgba(0, 0, 0, .08);
+        width: 100%;
+        max-width: 460px;
+        max-height: calc(100vh - 40px);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        animation: wptd-pop-in .25s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+@keyframes wptd-pop-in {
+        from { opacity: 0; transform: scale(.92) translateY(8px); }
+        to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.wptd-confirm__header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 22px 22px 0;
+}
+
+.wptd-confirm__icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        flex-shrink: 0;
+}
+.wptd-confirm__icon--primary {
+        background: var(--wptd-primary-soft);
+        color: var(--wptd-primary);
+}
+.wptd-confirm__icon--danger {
+        background: var(--wptd-danger-soft);
+        color: var(--wptd-danger);
+}
+.wptd-confirm__icon--warning {
+        background: var(--wptd-warning-soft);
+        color: #856404;
+}
+.wptd-confirm__icon--success {
+        background: var(--wptd-success-soft);
+        color: var(--wptd-success);
+}
+
+.wptd-confirm__title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--wptd-text);
+        letter-spacing: -.01em;
+        line-height: 1.3;
+}
+
+.wptd-confirm__body {
+        padding: 16px 22px 22px;
+        overflow-y: auto;
+        flex: 1;
+}
+.wptd-confirm__body p {
+        margin: 0 0 10px;
+        color: var(--wptd-text-muted);
+        font-size: 14px;
+        line-height: 1.6;
+}
+.wptd-confirm__body p:last-child { margin-bottom: 0; }
+.wptd-confirm__code {
+        display: block;
+        background: var(--wptd-surface-3);
+        color: var(--wptd-text-muted);
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-family: var(--wptd-font-mono);
+        font-size: 12.5px;
+        margin-top: 8px;
+        word-break: break-all;
+}
+
+.wptd-confirm__actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        padding: 14px 22px;
+        background: var(--wptd-surface-2);
+        border-top: 1px solid var(--wptd-border);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   ERROR CHECK MODAL (pre-save PHP lint popup)
+   ────────────────────────────────────────────────────────────────────────── */
+.wptd-errorcheck-overlay {
+        z-index: 1200; /* above confirm dialog */
+        /* Override .wptd-modal-overlay's justify-content: flex-end
+           (which is for slide-in side panels) so this popup is centred
+           on the screen instead of pushed to the right edge. */
+        justify-content: center !important;
+        align-items: center !important;
+        padding: 20px;
+}
+
+.wptd-errorcheck {
+        background: var(--wptd-surface);
+        border-radius: var(--wptd-radius-lg);
+        box-shadow: 0 24px 70px rgba(0, 0, 0, .3), 0 6px 16px rgba(0, 0, 0, .1);
+        width: 100%;
+        max-width: 760px;
+        max-height: calc(100vh - 40px);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        animation: wptd-pop-in .25s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+.wptd-errorcheck__header {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 20px 22px;
+        border-bottom: 1px solid var(--wptd-border);
+}
+.wptd-errorcheck__header.is-blocking {
+        background: linear-gradient(135deg, var(--wptd-danger-soft), var(--wptd-surface));
+}
+.wptd-errorcheck__header.is-warning {
+        background: linear-gradient(135deg, var(--wptd-warning-soft), var(--wptd-surface));
+}
+
+.wptd-errorcheck__title-block {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        flex: 1;
+        min-width: 0;
+}
+
+.wptd-errorcheck__badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 700;
+        flex-shrink: 0;
+}
+.wptd-errorcheck__badge.is-blocking {
+        background: var(--wptd-danger);
+        color: #fff;
+}
+.wptd-errorcheck__badge.is-warning {
+        background: var(--wptd-warning);
+        color: #1f1300;
+}
+
+.wptd-errorcheck__title {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--wptd-text);
+        letter-spacing: -.01em;
+        line-height: 1.3;
+}
+
+.wptd-errorcheck__subtitle {
+        margin: 4px 0 0;
+        font-size: 13px;
+        color: var(--wptd-text-muted);
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+}
+.wptd-errorcheck__subtitle code {
+        background: var(--wptd-surface-3);
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-family: var(--wptd-font-mono);
+        font-size: 12px;
+        color: var(--wptd-text-muted);
+        font-weight: 600;
+}
+
+/* Severity banner — explains the mode (blocking vs warning) in plain language */
+.wptd-errorcheck__banner {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 22px;
+        font-size: 13.5px;
+        line-height: 1.5;
+        border-bottom: 1px solid var(--wptd-border);
+}
+.wptd-errorcheck__banner.is-blocking {
+        background: var(--wptd-danger-soft);
+        color: var(--wptd-danger);
+}
+.wptd-errorcheck__banner.is-warning {
+        background: var(--wptd-warning-soft);
+        color: #856404;
+}
+.wptd-errorcheck__banner-icon {
+        display: inline-flex;
+        flex-shrink: 0;
+}
+.wptd-errorcheck__banner-text { flex: 1; }
+.wptd-errorcheck__banner-text strong { font-weight: 700; }
+
+.wptd-errorcheck__toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 22px;
+        background: var(--wptd-surface-2);
+        border-bottom: 1px solid var(--wptd-border);
+        flex-wrap: wrap;
+}
+
+.wptd-errorcheck__summary {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--wptd-text-muted);
+        flex-wrap: wrap;
+}
+.wptd-errorcheck__summary strong { color: var(--wptd-text); }
+.wptd-errorcheck__dot { color: var(--wptd-text-soft); }
+.wptd-errorcheck__engine {
+        font-family: var(--wptd-font-mono);
+        font-size: 11.5px;
+        background: var(--wptd-surface-3);
+        padding: 1px 7px;
+        border-radius: 4px;
+}
+.wptd-errorcheck__truncated {
+        color: var(--wptd-warning-text, #856404);
+        font-weight: 600;
+}
+
+.wptd-errorcheck__filters {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+}
+
+.wptd-errorcheck__filter {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--wptd-surface);
+        border: 1px solid var(--wptd-border);
+        color: var(--wptd-text-muted);
+        padding: 5px 11px;
+        border-radius: 16px;
+        font-size: 12.5px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--wptd-transition);
+        font-family: var(--wptd-font);
+}
+.wptd-errorcheck__filter:hover {
+        border-color: var(--wptd-primary);
+        color: var(--wptd-text);
+}
+.wptd-errorcheck__filter.is-active {
+        background: var(--wptd-primary);
+        border-color: var(--wptd-primary);
+        color: #fff;
+}
+.wptd-errorcheck__filter-count {
+        background: rgba(0, 0, 0, .08);
+        padding: 0 6px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 700;
+}
+.wptd-errorcheck__filter.is-active .wptd-errorcheck__filter-count {
+        background: rgba(255, 255, 255, .25);
+}
+
+.wptd-errorcheck__body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+}
+
+.wptd-errorcheck__group {
+        border: 1px solid var(--wptd-border);
+        border-radius: var(--wptd-radius);
+        background: var(--wptd-surface);
+        overflow: hidden;
+}
+.wptd-errorcheck__group.is-saved {
+        border-color: var(--wptd-primary);
+        box-shadow: 0 0 0 1px var(--wptd-primary-soft);
+}
+
+.wptd-errorcheck__group-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        background: var(--wptd-surface-2);
+        cursor: pointer;
+        user-select: none;
+        transition: background var(--wptd-transition);
+}
+.wptd-errorcheck__group-header:hover { background: var(--wptd-surface-3); }
+.wptd-errorcheck__group.is-saved .wptd-errorcheck__group-header {
+        background: var(--wptd-primary-softer);
+}
+.wptd-errorcheck__group.is-saved .wptd-errorcheck__group-header:hover {
+        background: var(--wptd-primary-soft);
+}
+
+.wptd-errorcheck__group-caret {
+        display: inline-flex;
+        color: var(--wptd-text-muted);
+}
+.wptd-errorcheck__group-icon {
+        display: inline-flex;
+        color: var(--wptd-text-muted);
+}
+.wptd-errorcheck__group.is-saved .wptd-errorcheck__group-icon {
+        color: var(--wptd-primary);
+}
+.wptd-errorcheck__group-path {
+        flex: 1;
+        font-family: var(--wptd-font-mono);
+        font-size: 13px;
+        color: var(--wptd-text);
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+}
+.wptd-errorcheck__group-count {
+        font-size: 12px;
+        color: var(--wptd-text-muted);
+        font-weight: 600;
+        background: var(--wptd-surface-3);
+        padding: 2px 8px;
+        border-radius: 6px;
+        flex-shrink: 0;
+}
+
+.wptd-errorcheck__errors {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+}
+
+.wptd-errorcheck__error {
+        border-top: 1px solid var(--wptd-border);
+        padding: 12px 14px;
+}
+.wptd-errorcheck__error:first-child { border-top: none; }
+
+.wptd-errorcheck__error-main { display: flex; flex-direction: column; gap: 8px; }
+
+.wptd-errorcheck__error-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+}
+
+.wptd-errorcheck__line-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 9px;
+        border-radius: 6px;
+        font-size: 11.5px;
+        font-weight: 700;
+        font-family: var(--wptd-font-mono);
+        flex-shrink: 0;
+}
+.wptd-errorcheck__line-badge--error {
+        background: var(--wptd-danger-soft);
+        color: var(--wptd-danger);
+}
+.wptd-errorcheck__line-badge--warning {
+        background: var(--wptd-warning-soft);
+        color: #856404;
+}
+
+.wptd-errorcheck__error-message {
+        flex: 1;
+        font-family: var(--wptd-font-mono);
+        font-size: 13px;
+        color: var(--wptd-text);
+        font-weight: 600;
+        word-break: break-word;
+}
+
+.wptd-errorcheck__jump {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: var(--wptd-primary-soft);
+        color: var(--wptd-primary);
+        border: 1px solid transparent;
+        padding: 4px 9px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all var(--wptd-transition);
+        font-family: var(--wptd-font);
+        flex-shrink: 0;
+}
+.wptd-errorcheck__jump:hover {
+        background: var(--wptd-primary);
+        color: #fff;
+}
+.wptd-errorcheck__jump svg { transform: rotate(45deg); }
+
+.wptd-errorcheck__solution {
+        background: var(--wptd-surface-2);
+        border-left: 3px solid var(--wptd-primary);
+        border-radius: 0 6px 6px 0;
+        padding: 10px 12px;
+}
+
+.wptd-errorcheck__solution-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--wptd-primary);
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        margin-bottom: 4px;
+}
+.wptd-errorcheck__solution p {
+        margin: 0;
+        font-size: 13px;
+        color: var(--wptd-text);
+        line-height: 1.55;
+}
+
+.wptd-errorcheck__footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 22px;
+        background: var(--wptd-surface-2);
+        border-top: 1px solid var(--wptd-border);
+}
+.wptd-errorcheck__footer.is-blocking {
+        background: var(--wptd-danger-soft);
+}
+.wptd-errorcheck__footer.is-warning {
+        background: var(--wptd-warning-soft);
+}
+
+.wptd-errorcheck__footer-actions {
+        display: flex;
+        gap: 10px;
+        flex-shrink: 0;
+}
+
+.wptd-errorcheck__crit-count { color: var(--wptd-danger); font-weight: 700; }
+.wptd-errorcheck__warn-count { color: #856404; font-weight: 700; }
+
+.wptd-errorcheck__hint {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12.5px;
+        color: var(--wptd-text-muted);
+        flex: 1;
+}
+
+/* Status bar "Checking syntax…" indicator */
+.wptd-statusbar__item--info {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        color: var(--wptd-primary);
+        font-weight: 600;
+}
+
+/* Mobile: error check modal goes full-screen */
+@media ( max-width: 700px ) {
+        .wptd-errorcheck {
+                max-width: 100%;
+                max-height: 100vh;
+                border-radius: 0;
+        }
+        .wptd-errorcheck__toolbar { flex-direction: column; align-items: flex-start; }
+        .wptd-errorcheck__footer { flex-direction: column; align-items: stretch; }
+        .wptd-errorcheck__hint { text-align: center; }
+}
+
+/* Responsive table — hide non-essential columns on small screens */
+@media ( max-width: 900px ) {
+        .wptd-col-version, .wptd-col-size { display: none; }
+}
+@media ( max-width: 600px ) {
+        .wptd-col-mtime { display: none; }
+        .wptd-table th, .wptd-table td { padding: 10px 12px; }
+        .wptd-col-name__mark { display: none; }
+        .wptd-col-actions { width: auto; }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   RECENT CHANGES PANEL (file edit history + git-style diff)
+   ────────────────────────────────────────────────────────────────────────── */
+.wptd-modal--revisions { max-width: 920px; }
+
+.wptd-revisions-filters {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 12px 22px;
+        background: var(--wptd-surface-2);
+        border-bottom: 1px solid var(--wptd-border);
+        flex-wrap: wrap;
+}
+
+.wptd-revisions-filter {
+        background: var(--wptd-surface);
+        border: 1px solid var(--wptd-border);
+        color: var(--wptd-text-muted);
+        padding: 6px 14px;
+        border-radius: 16px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--wptd-transition);
+        font-family: var(--wptd-font);
+}
+.wptd-revisions-filter:hover {
+        border-color: var(--wptd-primary);
+        color: var(--wptd-text);
+}
+.wptd-revisions-filter.is-active {
+        background: var(--wptd-primary);
+        border-color: var(--wptd-primary);
+        color: #fff;
+}
+
+.wptd-revisions-refresh {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--wptd-surface);
+        border: 1px solid var(--wptd-border);
+        color: var(--wptd-text-muted);
+        cursor: pointer;
+        transition: all var(--wptd-transition);
+}
+.wptd-revisions-refresh:hover {
+        background: var(--wptd-primary-soft);
+        color: var(--wptd-primary);
+        border-color: var(--wptd-primary);
+}
+
+.wptd-revisions-body {
+        flex: 1;
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        min-height: 0;
+}
+
+.wptd-revisions-list {
+        overflow-y: auto;
+        border-right: 1px solid var(--wptd-border);
+        background: var(--wptd-surface);
+}
+
+.wptd-revision-items {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+}
+
+.wptd-revision-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--wptd-border);
+        cursor: pointer;
+        transition: background var(--wptd-transition);
+}
+.wptd-revision-item:hover { background: var(--wptd-surface-2); }
+.wptd-revision-item.is-active {
+        background: var(--wptd-primary-softer);
+        box-shadow: inset 3px 0 0 var(--wptd-primary);
+}
+
+.wptd-revision-item__icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: var(--wptd-surface-3);
+        color: var(--wptd-text-muted);
+        flex-shrink: 0;
+}
+.wptd-revision-item.is-active .wptd-revision-item__icon {
+        background: var(--wptd-primary-soft);
+        color: var(--wptd-primary);
+}
+
+.wptd-revision-item__body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+}
+
+.wptd-revision-item__path {
+        font-size: 13.5px;
+        font-weight: 700;
+        color: var(--wptd-text);
+        font-family: var(--wptd-font-mono);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+}
+
+.wptd-revision-item__meta {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11.5px;
+        color: var(--wptd-text-muted);
+        flex-wrap: wrap;
+}
+.wptd-revision-item__dot { color: var(--wptd-text-soft); }
+.wptd-revision-item__delta.is-up { color: var(--wptd-success); font-weight: 700; }
+.wptd-revision-item__delta.is-down { color: var(--wptd-danger); font-weight: 700; }
+
+.wptd-revision-item__restore {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        background: transparent;
+        border: 1px solid var(--wptd-border);
+        color: var(--wptd-text-muted);
+        cursor: pointer;
+        transition: all var(--wptd-transition);
+}
+.wptd-revision-item__restore:hover {
+        background: var(--wptd-warning-soft);
+        color: #856404;
+        border-color: var(--wptd-warning);
+}
+.wptd-revision-item__restore:disabled { opacity: .6; cursor: wait; }
+
+/* ── Diff viewer ──────────────────────────────────────────────────────────── */
+.wptd-diff-viewer {
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        background: var(--wptd-surface);
+        min-height: 0;
+}
+
+.wptd-diff {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+}
+
+.wptd-diff__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px 16px;
+        background: var(--wptd-surface-2);
+        border-bottom: 1px solid var(--wptd-border);
+        flex-shrink: 0;
+}
+
+.wptd-diff__path {
+        font-family: var(--wptd-font-mono);
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--wptd-text);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+}
+
+.wptd-diff__stats { display: flex; gap: 8px; flex-shrink: 0; }
+.wptd-diff__stat {
+        font-family: var(--wptd-font-mono);
+        font-size: 12.5px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 4px;
+}
+.wptd-diff__stat--add { background: var(--wptd-success-soft); color: var(--wptd-success); }
+.wptd-diff__stat--del { background: var(--wptd-danger-soft); color: var(--wptd-danger); }
+
+.wptd-diff__body {
+        flex: 1;
+        overflow: auto;
+        font-family: var(--wptd-font-mono);
+        font-size: 12.5px;
+        line-height: 1.6;
+        background: var(--wptd-surface);
+}
+
+.wptd-diff__empty {
+        padding: 40px 20px;
+        text-align: center;
+        color: var(--wptd-text-muted);
+        font-family: var(--wptd-font);
+        font-size: 13px;
+}
+
+.wptd-diff__hunk {
+        border-bottom: 1px solid var(--wptd-border);
+}
+.wptd-diff__hunk:last-child { border-bottom: none; }
+
+.wptd-diff__hunk-header {
+        padding: 4px 16px;
+        background: var(--wptd-surface-3);
+        color: var(--wptd-text-muted);
+        font-size: 11.5px;
+        font-weight: 700;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+}
+
+.wptd-diff__line {
+        display: flex;
+        align-items: flex-start;
+        padding: 0 16px;
+        white-space: pre;
+        min-height: 19px;
+}
+.wptd-diff__line--context { color: var(--wptd-text-muted); }
+.wptd-diff__line--add {
+        background: rgba(40, 167, 69, .08);
+        color: #155724;
+}
+.wptd-diff__line--del {
+        background: rgba(220, 53, 69, .08);
+        color: #721c24;
+}
+
+.wptd-diff__line-num {
+        display: inline-flex;
+        width: 80px;
+        flex-shrink: 0;
+        color: var(--wptd-text-soft);
+        font-size: 11px;
+        user-select: none;
+}
+.wptd-diff__line-old,
+.wptd-diff__line-new {
+        display: inline-block;
+        width: 36px;
+        text-align: right;
+        padding-right: 6px;
+}
+
+.wptd-diff__line-prefix {
+        display: inline-block;
+        width: 16px;
+        flex-shrink: 0;
+        font-weight: 700;
+        user-select: none;
+}
+.wptd-diff__line--add .wptd-diff__line-prefix { color: var(--wptd-success); }
+.wptd-diff__line--del .wptd-diff__line-prefix { color: var(--wptd-danger); }
+
+.wptd-diff__line-text {
+        flex: 1;
+        white-space: pre-wrap;
+        word-break: break-word;
+        min-width: 0;
+}
+
+/* Responsive: stack the diff below the list on narrow screens */
+@media ( max-width: 700px ) {
+        .wptd-revisions-body {
+                grid-template-columns: 1fr;
+                grid-template-rows: 240px 1fr;
+        }
+        .wptd-revisions-list {
+                border-right: none;
+                border-bottom: 1px solid var(--wptd-border);
+        }
+}

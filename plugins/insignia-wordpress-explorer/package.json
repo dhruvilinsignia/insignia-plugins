@@ -1,0 +1,22 @@
+{
+  "name": "wp-plugin-theme-downloader",
+  "version": "1.0.0",
+  "description": "React admin UI for WP Plugin & Theme Downloader",
+  "private": true,
+  "scripts": {
+    "build":  "wp-scripts build",
+    "start":  "wp-scripts start",
+    "lint:js": "wp-scripts lint-js",
+    "lint:css": "wp-scripts lint-style"
+  },
+  "devDependencies": {
+    "@wordpress/scripts": "^27.0.0"
+  },
+  "dependencies": {
+    "@wordpress/api-fetch":  "*",
+    "@wordpress/components": "*",
+    "@wordpress/element":    "*",
+    "@wordpress/i18n":       "*",
+    "@wordpress/icons":      "*"
+  }
+}
